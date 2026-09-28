@@ -1,7 +1,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1 class="h4 mb-0">Lixeira</h1>
   <?php if ($files): ?>
-    <form method="post" action="<?= url('/arquivos/lixeira/esvaziar') ?>" data-confirm="Apagar DEFINITIVAMENTE todos os arquivos da lixeira?"><?= Csrf::field() ?><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash3"></i> Esvaziar lixeira</button></form>
+    <form method="post" action="<?= url('/arquivos/lixeira/esvaziar') ?>" data-confirm="Apagar DEFINITIVAMENTE todos os arquivos da lixeira?" data-confirm-type="danger"><?= Csrf::field() ?><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash3"></i> Esvaziar lixeira</button></form>
   <?php endif; ?>
 </div>
 <p class="small text-muted">Arquivos na lixeira são apagados automaticamente após <?= RETENTION_TRASH_DAYS ?> dias; rejeitados na quarentena, após <?= RETENTION_REJECTED_DAYS ?> dias.</p>

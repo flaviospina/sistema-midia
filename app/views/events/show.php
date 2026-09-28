@@ -22,7 +22,7 @@
         <form method="post" action="<?= url('/eventos/' . $eid . '/reativar') ?>"><?= Csrf::field() ?><button class="btn btn-sm btn-outline-success">Reativar</button></form>
       <?php endif; ?>
       <?php if ((int) $e['assigned_total'] === 0): ?>
-        <form method="post" action="<?= url('/eventos/' . $eid . '/excluir') ?>" data-confirm="Excluir definitivamente este evento?"><?= Csrf::field() ?><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-trash"></i></button></form>
+        <form method="post" action="<?= url('/eventos/' . $eid . '/excluir') ?>" data-confirm="Excluir definitivamente este evento?" data-confirm-type="danger"><?= Csrf::field() ?><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-trash"></i></button></form>
       <?php endif; ?>
     <?php endif; ?>
   </div>

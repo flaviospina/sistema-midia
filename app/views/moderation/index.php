@@ -46,7 +46,7 @@
           </form>
         </div>
         <div class="col-md-3">
-          <form method="post" action="<?= url('/moderacao/' . $fid . '/rejeitar') ?>" data-confirm="Rejeitar este arquivo?">
+          <form method="post" action="<?= url('/moderacao/' . $fid . '/rejeitar') ?>" data-confirm="Rejeitar este arquivo?" data-confirm-type="danger">
             <?= Csrf::field() ?>
             <input type="text" name="reason" class="form-control form-control-sm mb-2" placeholder="Motivo da rejeição" maxlength="500" required>
             <button class="btn btn-sm btn-outline-danger w-100"><i class="bi bi-x-lg"></i> Rejeitar</button>

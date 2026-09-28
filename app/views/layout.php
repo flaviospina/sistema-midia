@@ -7,16 +7,19 @@
 <meta name="csrf-token" content="<?= e(Csrf::token()) ?>">
 <title><?= e($title ?? APP_NAME) ?> · <?= e(APP_NAME) ?></title>
 <link rel="icon" href="<?= asset('img/favicon.svg') ?>" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <link href="<?= asset('css/app.css') ?>" rel="stylesheet">
 </head>
 <body>
 <?php if ($me): ?>
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+<nav class="navbar navbar-expand-lg navbar-dark topo sticky-top">
   <div class="container-fluid">
-    <a class="navbar-brand d-flex align-items-center gap-2" href="<?= url('/') ?>">
-      <i class="bi bi-camera-reels"></i> <span>Central de Mídia</span>
+    <a class="navbar-brand marca d-flex align-items-center gap-2" href="<?= url('/') ?>">
+      <span class="marca__logo"><i class="bi bi-camera-reels"></i></span> <span>Central de <strong>Mídia</strong></span>
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu" aria-label="Menu">
       <span class="navbar-toggler-icon"></span>

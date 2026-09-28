@@ -257,13 +257,16 @@
       if (!r.ok) throw new Error(r.mensagem || 'Não foi possível concluir o envio.');
       if (r.data && r.data.duplicate) {
         var d = r.data.duplicate;
-        var keep = window.confirm('Este arquivo já existe no repositório:\n\n' + d.name + '\nPasta: ' + d.folder + ' · ' + d.status + ' · ' + d.created_at + '\n\nDeseja gravar uma cópia mesmo assim?');
-        if (keep) { body.keep_duplicate = true; return self.finish(item, body, key); }
-        return api('POST', self.endpoint + '/cancelar', { upload_id: item.uploadId }).then(function () {
-          try { localStorage.removeItem(key); } catch (e) { /* ignorar */ }
-          item.state = 'ok';
-          self.setStatus(item, 'Ignorado: já existia' + (d.can_view ? '' : '') + '.', 100, 'bg-secondary');
-          if (d.can_view && d.id) { var a = document.createElement('a'); a.href = self.root.dataset.fileBase + d.id; a.className = 'btn btn-sm btn-outline-secondary'; a.textContent = 'Ver existente'; item.el.querySelector('[data-actions]').appendChild(a); }
+        var text = 'Este arquivo já existe no repositório: ' + d.name + ' (pasta ' + d.folder + ' · ' + d.status + ' · ' + d.created_at + '). Deseja gravar uma cópia mesmo assim?';
+        var ask = window.appDialog ? window.appDialog.confirm(text, { title: 'Arquivo duplicado', okLabel: 'Gravar cópia' }) : Promise.resolve(window.confirm(text));
+        return ask.then(function (keep) {
+          if (keep) { body.keep_duplicate = true; return self.finish(item, body, key); }
+          return api('POST', self.endpoint + '/cancelar', { upload_id: item.uploadId }).then(function () {
+            try { localStorage.removeItem(key); } catch (e) { /* ignorar */ }
+            item.state = 'ok';
+            self.setStatus(item, 'Ignorado: já existia.', 100, 'bg-secondary');
+            if (d.can_view && d.id) { var a = document.createElement('a'); a.href = self.root.dataset.fileBase + d.id; a.className = 'btn btn-sm btn-outline-secondary'; a.textContent = 'Ver existente'; item.el.querySelector('[data-actions]').appendChild(a); }
+          });
         });
       }
       try { localStorage.removeItem(key); } catch (e) { /* ignorar */ }

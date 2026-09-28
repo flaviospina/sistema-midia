@@ -49,7 +49,7 @@
                 <span class="badge <?= $a['status'] === 'confirmado' ? 'text-bg-success' : ($a['status'] === 'recusado' ? 'text-bg-secondary' : 'text-bg-warning') ?>"><?= e(Assignment::STATUSES[$a['status']]) ?></span>
                 <?php if ($a['note']): ?><span class="small text-muted">— <?= e($a['note']) ?></span><?php endif; ?></span>
               <?php if ($a['user_whatsapp']): ?><a href="<?= e(whatsapp_link($a['user_whatsapp'])) ?>" target="_blank" rel="noopener" class="btn btn-sm btn-outline-success" title="WhatsApp"><i class="bi bi-whatsapp"></i></a><?php endif; ?>
-              <?php if ($can): ?><form method="post" action="<?= url('/escalas/' . (int) $a['id'] . '/remover') ?>" data-confirm="Remover <?= e($a['user_name']) ?> da escala?"><?= Csrf::field() ?><button class="btn btn-sm btn-outline-danger" title="Remover"><i class="bi bi-x-lg"></i></button></form><?php endif; ?>
+              <?php if ($can): ?><form method="post" action="<?= url('/escalas/' . (int) $a['id'] . '/remover') ?>" data-confirm="Remover <?= e($a['user_name']) ?> da escala?" data-confirm-type="danger"><?= Csrf::field() ?><button class="btn btn-sm btn-outline-danger" title="Remover"><i class="bi bi-x-lg"></i></button></form><?php endif; ?>
             </li>
           <?php endforeach; ?>
           <?php if ($can && isset($candidates[$fid])): ?>

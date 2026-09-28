@@ -22,12 +22,70 @@
   // Selects que enviam o formulário ao mudar (CSP não permite onchange inline)
   document.querySelectorAll('select[data-autosubmit]').forEach(function (sel) { sel.addEventListener('change', function () { sel.form.submit(); }); });
 
-  // Confirmação em formulários com data-confirm
+  // Diálogos com modal do Bootstrap (substituem window.confirm/alert nativos)
+  var dialog = (function () {
+    var modalEl = null, instance = null, resolver = null;
+    function build() {
+      modalEl = document.createElement('div');
+      modalEl.className = 'modal fade app-dialog';
+      modalEl.tabIndex = -1;
+      modalEl.setAttribute('aria-modal', 'true');
+      modalEl.setAttribute('role', 'dialog');
+      modalEl.innerHTML =
+        '<div class="modal-dialog modal-dialog-centered"><div class="modal-content">' +
+        '<div class="modal-body"><div class="d-flex gap-3 align-items-start">' +
+        '<div class="app-dialog__icon" data-icon></div>' +
+        '<div class="flex-grow-1"><h2 class="h6 mb-1" data-title></h2><div class="app-dialog__text" data-text></div></div></div></div>' +
+        '<div class="modal-footer border-0 pt-0"><button type="button" class="btn btn-outline-secondary btn-sm" data-cancel>Cancelar</button>' +
+        '<button type="button" class="btn btn-primary btn-sm" data-ok>OK</button></div></div></div>';
+      document.body.appendChild(modalEl);
+      instance = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+      modalEl.querySelector('[data-ok]').addEventListener('click', function () { finish(true); });
+      modalEl.querySelector('[data-cancel]').addEventListener('click', function () { finish(false); });
+      modalEl.addEventListener('hidden.bs.modal', function () { finish(false); });
+      modalEl.addEventListener('shown.bs.modal', function () { modalEl.querySelector('[data-ok]').focus(); });
+    }
+    function finish(value) {
+      if (!resolver) return;
+      var r = resolver; resolver = null;
+      instance.hide();
+      r(value);
+    }
+    function open(opts) {
+      if (typeof bootstrap === 'undefined' || !bootstrap.Modal) {
+        return Promise.resolve(opts.confirm ? window.confirm(opts.text) : (window.alert(opts.text), true));
+      }
+      if (!modalEl) build();
+      var icons = { question: 'bi-question-circle', warning: 'bi-exclamation-triangle', danger: 'bi-exclamation-octagon', info: 'bi-info-circle', success: 'bi-check-circle' };
+      var type = opts.type || (opts.confirm ? 'question' : 'info');
+      modalEl.querySelector('[data-icon]').className = 'app-dialog__icon app-dialog__icon--' + type;
+      modalEl.querySelector('[data-icon]').innerHTML = '<i class="bi ' + (icons[type] || icons.info) + '"></i>';
+      modalEl.querySelector('[data-title]').textContent = opts.title || (opts.confirm ? 'Confirmar' : 'Aviso');
+      modalEl.querySelector('[data-text]').textContent = opts.text;
+      modalEl.querySelector('[data-cancel]').classList.toggle('d-none', !opts.confirm);
+      var ok = modalEl.querySelector('[data-ok]');
+      ok.textContent = opts.okLabel || (opts.confirm ? 'Sim, continuar' : 'OK');
+      ok.className = 'btn btn-sm ' + (type === 'danger' ? 'btn-danger' : 'btn-primary');
+      return new Promise(function (resolve) { resolver = resolve; instance.show(); });
+    }
+    return {
+      confirm: function (text, opts) { return open(Object.assign({ confirm: true, text: text }, opts || {})); },
+      alert: function (text, opts) { return open(Object.assign({ confirm: false, text: text }, opts || {})); }
+    };
+  })();
+  window.appDialog = dialog;
+
+  // Confirmação em formulários com data-confirm (data-confirm-type="danger" deixa o botão vermelho; data-confirm-ok muda o rótulo)
   document.addEventListener('submit', function (ev) {
     var form = ev.target;
-    if (form.dataset.confirm && !window.confirm(form.dataset.confirm)) {
-      ev.preventDefault();
-    }
+    if (!form.dataset.confirm || form.dataset.confirmed === '1') { delete form.dataset.confirmed; return; }
+    ev.preventDefault();
+    var submitter = ev.submitter || null;
+    dialog.confirm(form.dataset.confirm, { type: form.dataset.confirmType || 'warning', okLabel: form.dataset.confirmOk }).then(function (ok) {
+      if (!ok) return;
+      form.dataset.confirmed = '1';
+      if (typeof form.requestSubmit === 'function') { form.requestSubmit(submitter || undefined); } else { form.submit(); }
+    });
   });
 
   // Botão "Copiar"
@@ -70,7 +128,7 @@
       var f = photo.files && photo.files[0];
       if (!f) return;
       if (f.size > (parseInt(photo.dataset.maxMb || '5', 10) * 1024 * 1024)) {
-        alert('A foto deve ter no máximo ' + (photo.dataset.maxMb || '5') + ' MB.');
+        dialog.alert('A foto deve ter no máximo ' + (photo.dataset.maxMb || '5') + ' MB.', { type: 'warning', title: 'Foto muito grande' });
         photo.value = '';
         return;
       }

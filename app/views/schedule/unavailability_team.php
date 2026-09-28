@@ -8,7 +8,7 @@
       <td><a href="<?= url('/usuarios/' . (int) $u['user_id']) ?>"><?= e($u['user_name']) ?></a></td>
       <td><i class="bi <?= $u['kind'] === 'recorrente' ? 'bi-arrow-repeat' : 'bi-calendar-x' ?>"></i> <?= e(Unavailability::describe($u)) ?></td>
       <td class="text-muted"><?= e($u['reason'] ?? '') ?></td>
-      <td class="text-end"><form method="post" action="<?= url('/indisponibilidades/' . (int) $u['id'] . '/excluir') ?>" data-confirm="Remover esta indisponibilidade?"><?= Csrf::field() ?><button class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i></button></form></td>
+      <td class="text-end"><form method="post" action="<?= url('/indisponibilidades/' . (int) $u['id'] . '/excluir') ?>" data-confirm="Remover esta indisponibilidade?" data-confirm-type="danger"><?= Csrf::field() ?><button class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i></button></form></td>
     </tr>
   <?php endforeach; ?>
   </tbody>

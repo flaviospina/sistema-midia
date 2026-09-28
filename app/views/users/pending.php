@@ -22,7 +22,7 @@
         <?php endif; ?>
         <button class="btn btn-success btn-sm"><i class="bi bi-check-lg"></i> Aprovar</button>
       </form>
-      <form method="post" action="<?= url('/usuarios/' . (int) $u['id'] . '/recusar') ?>" data-confirm="Recusar e apagar os dados de <?= e($u['name']) ?>?">
+      <form method="post" action="<?= url('/usuarios/' . (int) $u['id'] . '/recusar') ?>" data-confirm="Recusar e apagar os dados de <?= e($u['name']) ?>?" data-confirm-type="danger">
         <?= Csrf::field() ?>
         <button class="btn btn-outline-danger btn-sm"><i class="bi bi-x-lg"></i> Recusar</button>
       </form>

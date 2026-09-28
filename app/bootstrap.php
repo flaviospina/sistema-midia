@@ -68,6 +68,6 @@ if (PHP_SAPI !== 'cli') {
     header('X-Frame-Options: DENY');
     header('Referrer-Policy: same-origin');
     header('Permissions-Policy: geolocation=(), microphone=()');
-    header("Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net{$captcha}; style-src 'self' https://cdn.jsdelivr.net{$captcha}; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'{$captcha}; frame-src 'self'{$captcha}; worker-src 'self' blob:; frame-ancestors 'none'; form-action 'self'; base-uri 'self'");
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net{$captcha}; style-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com{$captcha}; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'{$captcha}; frame-src 'self'{$captcha}; worker-src 'self' blob:; frame-ancestors 'none'; form-action 'self'; base-uri 'self'");
     Auth::startSession();
 }

@@ -44,7 +44,7 @@
         <button class="btn btn-primary"><i class="bi bi-check-lg"></i> Salvar</button>
       </div>
     </form>
-    <?php if ($isEdit): ?><form id="delForm" method="post" action="<?= url('/pastas/' . (int) $folder['id'] . '/excluir') ?>" data-confirm="Excluir esta pasta? Só é possível se estiver vazia."><?= Csrf::field() ?></form><?php endif; ?>
+    <?php if ($isEdit): ?><form id="delForm" method="post" action="<?= url('/pastas/' . (int) $folder['id'] . '/excluir') ?>" data-confirm="Excluir esta pasta? Só é possível se estiver vazia." data-confirm-type="danger"><?= Csrf::field() ?></form><?php endif; ?>
   </div>
   <div class="col-lg-5">
     <div class="card"><div class="card-body small">
