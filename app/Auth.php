@@ -55,6 +55,17 @@ final class Auth
         'publications.manage' => ['admin', 'coordenador', 'membro_midia'],
         // Integrações
         'integrations.manage' => ['admin'],
+        // Patrimônio, checklist, ocorrências, capacitação, painel do líder
+        'equipment.view'      => ['admin', 'coordenador', 'membro_midia'],
+        'equipment.manage'    => ['admin', 'coordenador'],
+        'checklist.fill'      => ['admin', 'coordenador', 'membro_midia'],
+        'checklist.manage'    => ['admin', 'coordenador'],
+        'incidents.report'    => ['admin', 'coordenador', 'membro_midia'],
+        'incidents.manage'    => ['admin', 'coordenador'],
+        'reports.fill'        => ['admin', 'coordenador', 'membro_midia'],
+        'training.view'       => ['admin', 'coordenador', 'membro_midia'],
+        'training.manage'     => ['admin', 'coordenador'],
+        'leader.dashboard'    => ['admin', 'coordenador', 'pastor'],
     ];
 
     private static ?array $user = null;

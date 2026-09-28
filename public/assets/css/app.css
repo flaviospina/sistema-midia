@@ -99,3 +99,25 @@ pre.json { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: .375re
 .kanban-card { display: block; background: #fff; border-radius: .375rem; padding: .5rem; margin-bottom: .5rem; text-decoration: none; color: #212529; box-shadow: 0 1px 2px rgba(0,0,0,.08); border-left: 3px solid transparent; }
 .kanban-card:hover { box-shadow: 0 2px 6px rgba(0,0,0,.15); color: #1f3a5f; }
 .kanban-card.late { border-left-color: #dc3545; }
+
+/* Patrimônio: QR e etiquetas */
+.w-1 { width: 1%; }
+.cursor-pointer { cursor: pointer; }
+.qr-box { width: 160px; height: 160px; }
+.qr-box svg, .label-qr svg { width: 100%; height: 100%; }
+.labels-sheet { display: flex; flex-wrap: wrap; gap: 4mm; }
+.label { width: 62mm; height: 32mm; border: 1px dashed #bbb; border-radius: 2mm; padding: 2mm; display: flex; gap: 2mm; align-items: center; page-break-inside: avoid; break-inside: avoid; background: #fff; }
+.label-qr { width: 26mm; height: 26mm; flex-shrink: 0; }
+.label-text { min-width: 0; line-height: 1.15; }
+.label-code { font-family: monospace; font-weight: 700; font-size: 13pt; }
+.label-name { font-size: 8.5pt; overflow: hidden; }
+.label-org { font-size: 7pt; color: #555; margin-top: 1mm; }
+@media print { .label { border-color: #ddd; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+
+/* Checklist pré-culto */
+.check-item label { cursor: pointer; }
+.check-item .form-check-input { width: 1.4em; height: 1.4em; }
+.check-item .form-check-input:checked + label { text-decoration: line-through; color: #6c757d; }
+
+/* Painel do líder */
+.chart-box { position: relative; height: 240px; }

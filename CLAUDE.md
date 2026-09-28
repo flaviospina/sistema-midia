@@ -169,7 +169,7 @@ Frequência, recusas, sobrecarga, pedidos atrasados, ministérios que mais deman
 - Repositório: `folders`, `files` (driver, referência, mime, tamanho, sha256, dimensões, duração, miniatura, visibilidade, status: quarentena/aprovado/rejeitado/lixeira), `file_tags`, `tags`, `upload_sessions`, `guest_uploads`, `share_links`, `download_log`
 - Escala: `events`, `event_recurrences`, `event_slots`, `assignments`, `unavailability`, `schedule_templates`
 - Artes: `art_requests`, `art_request_versions`, `art_request_comments`, `approvals`
-- Fase 6: `equipment`, `equipment_loans`, `checklists`, `incidents`, `trainings`
+- Fase 6: `equipment`, `equipment_loans`, `equipment_maintenance`, `checklist_items`, `event_checklist_checks`, `incidents`, `event_reports`, `trainings`, `training_progress`
 
 ## 8. Decisões pendentes (perguntar ao Flávio antes da fase correspondente)
 
@@ -183,3 +183,5 @@ Frequência, recusas, sobrecarga, pedidos atrasados, ministérios que mais deman
 
 ## 9. Checklist de segurança (toda fase)
 PDO com prepared statements · `htmlspecialchars()` em toda saída · `password_hash()` · `session_regenerate_id(true)` no login · CSRF em todo POST · `.env`, `app/` e `storage/` inacessíveis pela web · uploads renomeados e validados · logs de ação · exclusão/anonimização de dados pessoais a pedido do titular.
+
+7. **Decidido (Fase 6):** promoção aprendiz → apto é manual pelo coordenador (botão liberado só com a trilha obrigatória validada); QR Code das etiquetas gerado no navegador (`qrcode-generator` via CDN) apontando para `/patrimonio/q/{token}`, com login exigido; gráficos do painel com Chart.js via CDN e dados em bloco JSON (sem script inline, compatível com a CSP).

@@ -67,6 +67,13 @@
     <?php if (Auth::can('files.upload') && $e['status'] !== 'cancelado'): ?>
       <a href="<?= url('/arquivos/enviar', ['evento' => $eid]) ?>" class="btn btn-outline-secondary btn-sm w-100 mb-3"><i class="bi bi-cloud-arrow-up"></i> Enviar fotos/vídeos deste evento</a>
     <?php endif; ?>
+    <?php if ($e['status'] !== 'cancelado' && (Auth::can('checklist.fill') || Auth::can('reports.fill') || Auth::can('incidents.report'))): $progress = Auth::can('checklist.fill') ? Checklist::progress($eid) : []; $pd = array_sum(array_column($progress, 'done')); $pt = array_sum(array_column($progress, 'total')); $hasReport = Auth::can('reports.fill') && Incident::report($eid) !== null; ?>
+      <div class="card mb-3"><div class="card-header bg-white fw-semibold">Operação</div><div class="list-group list-group-flush">
+        <?php if (Auth::can('checklist.fill')): ?><a href="<?= url('/eventos/' . $eid . '/checklist') ?>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"><span><i class="bi bi-check2-square"></i> Checklist pré-culto</span><?= $pt ? '<span class="badge ' . ($pd >= $pt ? 'text-bg-success' : 'text-bg-light border') . '">' . $pd . '/' . $pt . '</span>' : '' ?></a><?php endif; ?>
+        <?php if (Auth::can('reports.fill') && $past): ?><a href="<?= url('/eventos/' . $eid . '/relatorio') ?>" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"><span><i class="bi bi-journal-text"></i> Relatório pós-culto</span><?= $hasReport ? '<span class="badge text-bg-success">preenchido</span>' : '<span class="badge text-bg-warning">pendente</span>' ?></a><?php endif; ?>
+        <?php if (Auth::can('incidents.report')): ?><a href="<?= url('/ocorrencias/nova', ['evento' => $eid]) ?>" class="list-group-item list-group-item-action"><i class="bi bi-exclamation-triangle"></i> Registrar ocorrência</a><?php endif; ?>
+      </div></div>
+    <?php endif; ?>
     <div class="card"><div class="card-body small text-muted">Criado em <?= e(format_datetime($e['created_at'])) ?>.</div></div>
   </div>
 </div>

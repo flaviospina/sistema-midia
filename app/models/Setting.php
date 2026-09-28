@@ -14,6 +14,8 @@ final class Setting
         'arquivo.quarentena'      => ['Novos arquivos na quarentena (para coordenadores, agrupado)', true],
         'arte.status'             => ['Mudança de status de pedido de arte (solicitante, designer, pastor, coordenação)', true],
         'comunicacao.hoje'        => ['Publicações agendadas para hoje (para o responsável)', true],
+        'ocorrencia.alta'         => ['Ocorrência de gravidade alta (para coordenadores e admin)', true],
+        'capacitacao.apto'        => ['Trilha concluída: pessoa promovida a apto (para a pessoa)', true],
     ];
 
     private static ?array $cache = null;

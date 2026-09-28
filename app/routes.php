@@ -224,4 +224,51 @@ $r->post('/integracoes/{id}/cancelar', [IntegrationController::class, 'cancel'],
 $r->get('/api/n8n/ping', [N8nController::class, 'ping'], ['auth' => false]);
 $r->post('/api/n8n/entrada', [N8nController::class, 'inbound'], ['auth' => false, 'csrf' => false]);
 
+// ---------------------------------------------------------------------
+// Patrimônio, checklist, ocorrências, capacitação e painel do líder (Fase 6)
+// ---------------------------------------------------------------------
+$r->get('/patrimonio', [EquipmentController::class, 'index'], ['perm' => 'equipment.view']);
+$r->get('/patrimonio/novo', [EquipmentController::class, 'create'], ['perm' => 'equipment.manage']);
+$r->post('/patrimonio', [EquipmentController::class, 'store'], ['perm' => 'equipment.manage']);
+$r->post('/patrimonio/etiquetas', [EquipmentController::class, 'labels'], ['perm' => 'equipment.manage']);
+$r->get('/patrimonio/q/{token}', [EquipmentController::class, 'byToken'], ['perm' => 'equipment.view']);
+$r->get('/patrimonio/{id}', [EquipmentController::class, 'show'], ['perm' => 'equipment.view']);
+$r->get('/patrimonio/{id}/etiqueta', [EquipmentController::class, 'label'], ['perm' => 'equipment.view']);
+$r->get('/patrimonio/{id}/foto', [EquipmentController::class, 'photo'], ['perm' => 'equipment.view']);
+$r->get('/patrimonio/{id}/editar', [EquipmentController::class, 'edit'], ['perm' => 'equipment.manage']);
+$r->post('/patrimonio/{id}', [EquipmentController::class, 'update'], ['perm' => 'equipment.manage']);
+$r->post('/patrimonio/{id}/emprestar', [EquipmentController::class, 'loan'], ['perm' => 'equipment.view']);
+$r->post('/patrimonio/{id}/devolver', [EquipmentController::class, 'returnLoan'], ['perm' => 'equipment.view']);
+$r->post('/patrimonio/{id}/manutencao', [EquipmentController::class, 'openMaintenance'], ['perm' => 'equipment.manage']);
+$r->post('/patrimonio/{id}/manutencao/{mid}/encerrar', [EquipmentController::class, 'closeMaintenance'], ['perm' => 'equipment.manage']);
+
+$r->get('/eventos/{id}/checklist', [ChecklistController::class, 'fill'], ['perm' => 'checklist.fill']);
+$r->post('/eventos/{id}/checklist/{fid}', [ChecklistController::class, 'save'], ['perm' => 'checklist.fill']);
+$r->get('/checklist', [ChecklistController::class, 'config'], ['perm' => 'checklist.manage']);
+$r->post('/checklist/{id}', [ChecklistController::class, 'saveConfig'], ['perm' => 'checklist.manage']);
+
+$r->get('/ocorrencias', [IncidentController::class, 'index'], ['perm' => 'incidents.report']);
+$r->get('/ocorrencias/nova', [IncidentController::class, 'create'], ['perm' => 'incidents.report']);
+$r->post('/ocorrencias', [IncidentController::class, 'store'], ['perm' => 'incidents.report']);
+$r->get('/ocorrencias/{id}', [IncidentController::class, 'show'], ['perm' => 'incidents.report']);
+$r->get('/ocorrencias/{id}/editar', [IncidentController::class, 'edit'], ['perm' => 'incidents.report']);
+$r->post('/ocorrencias/{id}', [IncidentController::class, 'update'], ['perm' => 'incidents.report']);
+$r->post('/ocorrencias/{id}/status', [IncidentController::class, 'status'], ['perm' => 'incidents.manage']);
+$r->get('/eventos/{id}/relatorio', [IncidentController::class, 'reportForm'], ['perm' => 'reports.fill']);
+$r->post('/eventos/{id}/relatorio', [IncidentController::class, 'reportSave'], ['perm' => 'reports.fill']);
+
+$r->get('/capacitacao', [TrainingController::class, 'index'], ['perm' => 'training.view']);
+$r->post('/capacitacao/{id}/concluir', [TrainingController::class, 'complete'], ['perm' => 'training.view']);
+$r->get('/capacitacao/equipe', [TrainingController::class, 'team'], ['perm' => 'training.manage']);
+$r->get('/capacitacao/pessoa/{id}', [TrainingController::class, 'person'], ['perm' => 'training.manage']);
+$r->post('/capacitacao/pessoa/{id}/validar/{tid}', [TrainingController::class, 'validateProgress'], ['perm' => 'training.manage']);
+$r->post('/capacitacao/pessoa/{id}/promover/{fid}', [TrainingController::class, 'promote'], ['perm' => 'training.manage']);
+$r->get('/capacitacao/trilhas', [TrainingController::class, 'config'], ['perm' => 'training.manage']);
+$r->get('/capacitacao/trilhas/novo', [TrainingController::class, 'create'], ['perm' => 'training.manage']);
+$r->post('/capacitacao/trilhas', [TrainingController::class, 'store'], ['perm' => 'training.manage']);
+$r->get('/capacitacao/trilhas/{id}/editar', [TrainingController::class, 'edit'], ['perm' => 'training.manage']);
+$r->post('/capacitacao/trilhas/{id}', [TrainingController::class, 'update'], ['perm' => 'training.manage']);
+
+$r->get('/painel-lider', [LeaderController::class, 'index'], ['perm' => 'leader.dashboard']);
+
 return $r;

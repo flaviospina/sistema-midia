@@ -31,7 +31,7 @@ Escolha uma das duas formas. A **opção A** é a recomendada (pastas internas f
    ```php
    define('APP_ROOT', '/home/USUARIO/midia_app');
    ```
-4. Dê permissão de escrita (755 ou 775) à pasta `midia_app/storage` e suas subpastas (`files`, `thumbs`, `display`, `tmp_chunks`, `quarantine`, `photos`, `restrictions`, `logs`).
+4. Dê permissão de escrita (755 ou 775) à pasta `midia_app/storage` e suas subpastas (`files`, `thumbs`, `display`, `tmp_chunks`, `quarantine`, `photos`, `restrictions`, `equipment`, `logs`).
 
 ### Opção B — tudo dentro de `public_html/midia`
 
@@ -108,28 +108,37 @@ O sistema **não fala com o WhatsApp diretamente**: ele envia cada aviso (destin
 4. **Respostas SIM/NÃO** (opcional): importe `docs/n8n-respostas-entrada.json`; no nó "Central de Mídia: /api/n8n/entrada" coloque a URL do seu sistema e um segundo segredo, que vai também em `N8N_INBOUND_SECRET` no `.env`. Na Evolution API, configure o webhook do evento `messages.upsert` apontando para a URL do Webhook desse workflow. Quem responder "SIM"/"NÃO" confirma ou recusa a próxima escala pendente e recebe a confirmação de volta.
 5. Cada pessoa pode desligar os avisos em *Meus dados*; o admin liga/desliga cada tipo em *Integrações*. O formato do payload de saída está descrito em `docs/n8n-avisos-saida.json` (campos `event`, `recipients[]`, `message`, `data`).
 
-## 10. Perfis de acesso
+## 10. Patrimônio, checklist, ocorrências e capacitação
+
+- **Patrimônio** (*Equipe → Patrimônio*): inventário com código (`MID-0001`, sugerido automaticamente), categoria, marca/modelo, série, valor, local e foto. Cada item tem uma **etiqueta com QR Code** (botão *Etiqueta*, ou selecione vários e clique *Etiquetas selecionadas*; 62 × 32 mm, 3 por linha em A4). Apontar a câmera do celular para o QR abre a ficha do item (é preciso estar logado). **Empréstimo**: qualquer membro da equipe registra que pegou um item (com prazo); só quem pegou ou um coordenador registra a devolução; devolução "danificado" manda o item para manutenção. **Manutenção**: coordenador abre (preventiva/corretiva, fornecedor, custo) e encerra devolvendo ao uso ou **baixando** o item. Empréstimos vencidos aparecem no topo da lista e no painel do líder, com atalho para cobrar pelo WhatsApp.
+- **Checklist pré-culto** (na página do evento → *Checklist pré-culto*): itens por função, definidos em *Administração → Checklist pré-culto (itens)*. Cada escalado marca os itens da sua função; coordenadores marcam qualquer função. O progresso aparece na página do evento e no relatório.
+- **Ocorrências** (*Equipe → Ocorrências* ou pelo evento/equipamento): tipo, gravidade, evento e equipamento envolvidos. Gravidade **alta** avisa coordenadores e admin (WhatsApp, se ligado). Coordenadores mudam a situação (aberta → em andamento → resolvida, com descrição da solução obrigatória).
+- **Relatório pós-culto** (página do evento passado → *Relatório pós-culto*): plataforma, pico/média/views da live, público presencial estimado, resumo, o que funcionou e o que melhorar. Ao salvar, o culto passa a *concluído*. Cultos sem relatório nos últimos 14 dias aparecem em *Ocorrências* e no painel do líder.
+- **Capacitação** (*Equipe → Capacitação*): trilha de treinamentos por função (*Administração → Trilhas de capacitação*: título, descrição, link ou arquivo do repositório, obrigatório/opcional). O aprendiz marca *Concluí*; o coordenador **valida** em *Capacitação da equipe → pessoa*; com todos os obrigatórios validados aparece o botão **Promover a apto**, que muda o nível em *Pessoas* (e, a partir daí, a pessoa passa a ser sugerida no preenchimento automático da escala) e avisa a pessoa.
+- **Painel do líder** (*Equipe → Painel do líder*; admin, coordenadores e pastor): escalas confirmadas/pendentes/recusadas por pessoa, sobrecarga e recusas frequentes, audiência das transmissões, ministérios que mais pedem artes, atrasos, uso do repositório por mês, ocorrências por tipo, patrimônio e prontos para promoção. Período selecionável (30 a 365 dias).
+
+## 11. Perfis de acesso
 
 | Perfil | Pode |
 |---|---|
-| admin | Tudo, inclusive ver originais com EXIF, conteúdo "restrito", escalar qualquer função, aprovar artes (mídia e pastoral) |
-| coordenador | Pessoas, funções, pastas, quarentena, restrições, links, armazenamento; eventos, cultos fixos, modelos e escala das funções que coordena; aprovação de artes pela mídia, designer, atrasos, checklist |
-| membro_midia | Enviar direto para pastas da equipe, restrições de imagem, links; minha escala, indisponibilidades, trocas; produzir artes (kanban, versões), calendário de comunicação |
+| admin | Tudo, inclusive ver originais com EXIF, conteúdo "restrito", escalar qualquer função, aprovar artes (mídia e pastoral), patrimônio, trilhas, checklist e painel do líder |
+| coordenador | Pessoas, funções, pastas, quarentena, restrições, links, armazenamento; eventos, cultos fixos, modelos e escala das funções que coordena; aprovação de artes pela mídia, designer, atrasos, checklist; patrimônio (cadastro, manutenção, etiquetas), itens de checklist, ocorrências (situação), trilhas e validação de capacitação, painel do líder |
+| membro_midia | Enviar direto para pastas da equipe, restrições de imagem, links; minha escala, indisponibilidades, trocas; produzir artes (kanban, versões), calendário de comunicação; ver patrimônio e pegar/devolver itens, checklist da sua função, registrar ocorrências e relatório pós-culto, sua trilha de capacitação |
 | lider_ministerio | Ver e enviar na pasta do seu ministério; ver eventos; abrir e acompanhar pedidos de arte do seu ministério; ver as publicações do seu ministério |
-| pastor | Ver eventos e a escala montada; abrir pedidos; aprovação pastoral de artes; calendário de comunicação |
+| pastor | Ver eventos e a escala montada; abrir pedidos; aprovação pastoral de artes; calendário de comunicação; painel do líder |
 | membro_igreja | Ver eventos; ver o que for "todos os usuários"; envios vão para a quarentena |
 | Convidado (sem login) | Só a página `/enviar` |
 
 Visibilidade das pastas: **restrito** (admin) · **equipe de mídia** · **equipe + ministério dono** · **todos os usuários logados**. Subpastas herdam; um arquivo pode sobrescrever a da pasta. Arquivo marcado "contém pessoa com restrição de imagem" fica sempre restrito.
 
-## 11. Onde ficam as coisas
+## 12. Onde ficam as coisas
 
 - Arquivos do repositório: `storage/files/AAAA/MM/` (nome aleatório; o nome original fica só no banco). Miniaturas em `storage/thumbs`, versão exibida sem EXIF/GPS em `storage/display`, quarentena em `storage/quarantine`. Nada disso é acessível por link direto: toda entrega passa por `/arquivos/{id}/download` com checagem de permissão e registro em `download_log`.
-- Fotos de perfil: `storage/photos/`. Fotos de referência de restrições: `storage/restrictions/`.
+- Fotos de perfil: `storage/photos/`. Fotos de referência de restrições: `storage/restrictions/`. Fotos do patrimônio: `storage/equipment/`.
 - Logs técnicos: `storage/logs/app-AAAA-MM.log` e `php-error.log`.
 - Trilha de auditoria: *Administração → Auditoria*. Solicitações LGPD: *Administração → Privacidade*.
 - Espaço usado por pasta, tipo e pessoa: *Administração → Armazenamento*.
 
-## 12. Atualização de versão
+## 13. Atualização de versão
 
 Substitua os arquivos (menos `.env` e `storage/`) e importe novamente `sql/schema.sql`. Se o termo de privacidade mudar, aumente `TERMS_VERSION` no `.env`: todos serão convidados a aceitar a nova versão no próximo acesso.

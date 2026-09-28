@@ -110,3 +110,36 @@
     sync();
   });
 })();
+
+// Fase 6: "selecionar todos" numa tabela + botão que depende de seleção
+(function () {
+  'use strict';
+  document.querySelectorAll('[data-check-all]').forEach(function (master) {
+    var form = document.getElementById(master.dataset.checkAll);
+    if (!form) return;
+    var boxes = function () { return form.querySelectorAll('input[type="checkbox"][name$="[]"]'); };
+    var btn = document.getElementById('labelsBtn');
+    var sync = function () { if (btn) btn.disabled = !form.querySelector('input[type="checkbox"][name$="[]"]:checked'); };
+    master.addEventListener('change', function () { boxes().forEach(function (b) { b.checked = master.checked; }); sync(); });
+    form.addEventListener('change', sync);
+    sync();
+  });
+
+  // Linhas repetíveis (checklist pré-culto): clona o <template> com índice novo
+  document.querySelectorAll('form[data-repeat]').forEach(function (form) {
+    var rows = form.querySelector('[data-rows]');
+    var tpl = form.querySelector('[data-row-template]');
+    var add = form.querySelector('[data-add-row]');
+    if (!rows || !tpl || !add) return;
+    add.addEventListener('click', function () {
+      var n = rows.querySelectorAll('[data-row]').length + 1000; // evita colidir com índices existentes
+      var html = tpl.innerHTML.replace(/__N__/g, String(n));
+      var wrap = document.createElement('div');
+      wrap.innerHTML = html;
+      var row = wrap.firstElementChild;
+      rows.insertBefore(row, tpl);
+      var input = row.querySelector('input[type="text"]');
+      if (input) input.focus();
+    });
+  });
+})();

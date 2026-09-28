@@ -39,6 +39,19 @@
         <?php if (Auth::can('publications.view')): ?>
           <li class="nav-item"><a class="nav-link" href="<?= url('/comunicacao') ?>"><i class="bi bi-megaphone"></i> Comunicação</a></li>
         <?php endif; ?>
+        <?php if (Auth::can('equipment.view') || Auth::can('training.view')): ?>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-tools"></i> Equipe</a>
+            <ul class="dropdown-menu">
+              <?php if (Auth::can('equipment.view')): ?><li><a class="dropdown-item" href="<?= url('/patrimonio') ?>"><i class="bi bi-box-seam"></i> Patrimônio</a></li><?php endif; ?>
+              <?php if (Auth::can('incidents.report')): ?><li><a class="dropdown-item" href="<?= url('/ocorrencias') ?>"><i class="bi bi-exclamation-triangle"></i> Ocorrências</a></li><?php endif; ?>
+              <?php if (Auth::can('training.view')): ?><li><a class="dropdown-item" href="<?= url('/capacitacao') ?>"><i class="bi bi-mortarboard"></i> Capacitação</a></li><?php endif; ?>
+              <?php if (Auth::can('leader.dashboard')): ?><li><hr class="dropdown-divider"></li><li><a class="dropdown-item" href="<?= url('/painel-lider') ?>"><i class="bi bi-speedometer2"></i> Painel do líder</a></li><?php endif; ?>
+            </ul>
+          </li>
+        <?php elseif (Auth::can('leader.dashboard')): ?>
+          <li class="nav-item"><a class="nav-link" href="<?= url('/painel-lider') ?>"><i class="bi bi-speedometer2"></i> Painel</a></li>
+        <?php endif; ?>
         <?php if (Auth::can('files.moderate')): $qn = MediaFile::countQuarantine(); ?>
           <li class="nav-item"><a class="nav-link" href="<?= url('/moderacao') ?>"><i class="bi bi-shield-check"></i> Quarentena<?= $qn ? ' <span class="badge text-bg-warning">' . $qn . '</span>' : '' ?></a></li>
         <?php endif; ?>
@@ -60,6 +73,10 @@
               <li><a class="dropdown-item" href="<?= url('/modelos') ?>">Modelos de escala</a></li>
               <li><a class="dropdown-item" href="<?= url('/trocas') ?>">Pedidos de troca</a></li>
               <li><a class="dropdown-item" href="<?= url('/indisponibilidades/equipe') ?>">Indisponibilidades da equipe</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="<?= url('/checklist') ?>">Checklist pré-culto (itens)</a></li>
+              <li><a class="dropdown-item" href="<?= url('/capacitacao/trilhas') ?>">Trilhas de capacitação</a></li>
+              <li><a class="dropdown-item" href="<?= url('/capacitacao/equipe') ?>">Capacitação da equipe</a></li>
               <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item" href="<?= url('/restricoes') ?>">Restrições de imagem</a></li>
               <li><a class="dropdown-item" href="<?= url('/compartilhamentos') ?>">Links de compartilhamento</a></li>
@@ -85,6 +102,10 @@
               <li><a class="dropdown-item" href="<?= url('/modelos') ?>">Modelos de escala</a></li>
               <li><a class="dropdown-item" href="<?= url('/trocas') ?>">Pedidos de troca</a></li>
               <li><a class="dropdown-item" href="<?= url('/indisponibilidades/equipe') ?>">Indisponibilidades da equipe</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="<?= url('/checklist') ?>">Checklist pré-culto (itens)</a></li>
+              <li><a class="dropdown-item" href="<?= url('/capacitacao/trilhas') ?>">Trilhas de capacitação</a></li>
+              <li><a class="dropdown-item" href="<?= url('/capacitacao/equipe') ?>">Capacitação da equipe</a></li>
               <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item" href="<?= url('/usuarios/pendentes') ?>">Cadastros pendentes</a></li>
               <li><a class="dropdown-item" href="<?= url('/restricoes') ?>">Restrições de imagem</a></li>

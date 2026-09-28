@@ -42,7 +42,7 @@ function env_bool(string $key, bool $default = false): bool
     return in_array($value, ['1', 'true', 'sim', 'yes', 'on'], true);
 }
 
-define('APP_VERSION', '5.0.0');
+define('APP_VERSION', '6.0.0');
 define('APP_CODE', 'midia'); // código deste sistema em user_roles
 define('APP_ENV', env('APP_ENV', 'production'));
 define('APP_NAME', env('APP_NAME', 'Central de Mídia ADMoema'));

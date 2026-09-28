@@ -711,6 +711,165 @@ CREATE TABLE IF NOT EXISTS inbound_messages (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
+-- Patrimônio, checklist, ocorrências e capacitação (Fase 6)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS equipment (
+    id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    code          VARCHAR(20)  NOT NULL,               -- etiqueta, ex.: MID-0001
+    name          VARCHAR(120) NOT NULL,
+    category      ENUM('som','video','iluminacao','informatica','cabo','acessorio','outro') NOT NULL DEFAULT 'outro',
+    brand         VARCHAR(80)  NULL,
+    model         VARCHAR(80)  NULL,
+    serial_number VARCHAR(80)  NULL,
+    acquired_on   DATE         NULL,
+    value_cents   INT UNSIGNED NULL,
+    location      VARCHAR(120) NULL,
+    status        ENUM('disponivel','emprestado','manutencao','baixado') NOT NULL DEFAULT 'disponivel',
+    notes         TEXT         NULL,
+    photo_path    VARCHAR(120) NULL,
+    qr_token      CHAR(32)     NOT NULL,
+    created_by    INT UNSIGNED NULL,
+    created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    DATETIME     NULL ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_equipment_code (code),
+    UNIQUE KEY uq_equipment_qr (qr_token),
+    KEY idx_equipment_status (status, category),
+    CONSTRAINT fk_equipment_creator FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS equipment_loans (
+    id                 INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    equipment_id       INT UNSIGNED NOT NULL,
+    user_id            INT UNSIGNED NOT NULL,           -- quem pegou
+    purpose            VARCHAR(200) NULL,
+    loaned_at          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    due_on             DATE         NULL,
+    returned_at        DATETIME     NULL,
+    returned_condition ENUM('ok','danificado') NULL,
+    notes              VARCHAR(500) NULL,
+    loaned_by          INT UNSIGNED NULL,
+    returned_by        INT UNSIGNED NULL,
+    KEY idx_loans_equipment (equipment_id, returned_at),
+    KEY idx_loans_user (user_id, returned_at),
+    CONSTRAINT fk_loans_equipment FOREIGN KEY (equipment_id) REFERENCES equipment (id) ON DELETE CASCADE,
+    CONSTRAINT fk_loans_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_loans_by FOREIGN KEY (loaned_by) REFERENCES users (id) ON DELETE SET NULL,
+    CONSTRAINT fk_loans_returned_by FOREIGN KEY (returned_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS equipment_maintenance (
+    id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    equipment_id INT UNSIGNED NOT NULL,
+    kind         ENUM('preventiva','corretiva') NOT NULL DEFAULT 'corretiva',
+    description  VARCHAR(500) NOT NULL,
+    provider     VARCHAR(120) NULL,
+    opened_on    DATE         NOT NULL,
+    closed_on    DATE         NULL,
+    cost_cents   INT UNSIGNED NULL,
+    result       VARCHAR(500) NULL,
+    opened_by    INT UNSIGNED NULL,
+    created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_maintenance_equipment (equipment_id, closed_on),
+    CONSTRAINT fk_maintenance_equipment FOREIGN KEY (equipment_id) REFERENCES equipment (id) ON DELETE CASCADE,
+    CONSTRAINT fk_maintenance_by FOREIGN KEY (opened_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Checklist pré-culto: itens por função, marcados por evento
+CREATE TABLE IF NOT EXISTS checklist_items (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    function_id INT UNSIGNED NOT NULL,
+    label       VARCHAR(150) NOT NULL,
+    sort_order  SMALLINT     NOT NULL DEFAULT 0,
+    active      TINYINT(1)   NOT NULL DEFAULT 1,
+    KEY idx_checklist_items_function (function_id, active, sort_order),
+    CONSTRAINT fk_checklist_items_function FOREIGN KEY (function_id) REFERENCES media_functions (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS event_checklist_checks (
+    event_id   INT UNSIGNED NOT NULL,
+    item_id    INT UNSIGNED NOT NULL,
+    checked_by INT UNSIGNED NULL,
+    checked_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (event_id, item_id),
+    CONSTRAINT fk_ecc_event FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE,
+    CONSTRAINT fk_ecc_item FOREIGN KEY (item_id) REFERENCES checklist_items (id) ON DELETE CASCADE,
+    CONSTRAINT fk_ecc_user FOREIGN KEY (checked_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Ocorrências (durante/após o culto)
+CREATE TABLE IF NOT EXISTS incidents (
+    id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    event_id     INT UNSIGNED NULL,
+    equipment_id INT UNSIGNED NULL,
+    kind         ENUM('tecnico','equipamento','transmissao','pessoal','outro') NOT NULL DEFAULT 'tecnico',
+    severity     ENUM('baixa','media','alta') NOT NULL DEFAULT 'media',
+    title        VARCHAR(150) NOT NULL,
+    description  TEXT         NULL,
+    status       ENUM('aberta','em_andamento','resolvida') NOT NULL DEFAULT 'aberta',
+    resolution   TEXT         NULL,
+    resolved_at  DATETIME     NULL,
+    resolved_by  INT UNSIGNED NULL,
+    reported_by  INT UNSIGNED NULL,
+    created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   DATETIME     NULL ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_incidents_status (status, severity),
+    KEY idx_incidents_event (event_id),
+    KEY idx_incidents_equipment (equipment_id),
+    CONSTRAINT fk_incidents_event FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE SET NULL,
+    CONSTRAINT fk_incidents_equipment FOREIGN KEY (equipment_id) REFERENCES equipment (id) ON DELETE SET NULL,
+    CONSTRAINT fk_incidents_resolver FOREIGN KEY (resolved_by) REFERENCES users (id) ON DELETE SET NULL,
+    CONSTRAINT fk_incidents_reporter FOREIGN KEY (reported_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Relatório pós-culto (um por evento)
+CREATE TABLE IF NOT EXISTS event_reports (
+    event_id            INT UNSIGNED NOT NULL PRIMARY KEY,
+    filled_by           INT UNSIGNED NULL,
+    live_platform       VARCHAR(60)  NULL,
+    live_peak           INT UNSIGNED NULL,      -- pico de espectadores
+    live_average        INT UNSIGNED NULL,
+    live_total_views    INT UNSIGNED NULL,
+    attendance_estimate INT UNSIGNED NULL,      -- público presencial estimado
+    summary             TEXT         NULL,
+    highlights          TEXT         NULL,      -- o que funcionou bem
+    improvements        TEXT         NULL,      -- o que melhorar
+    created_at          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME     NULL ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_reports_event FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE,
+    CONSTRAINT fk_reports_user FOREIGN KEY (filled_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Capacitação: trilha por função e progresso por pessoa
+CREATE TABLE IF NOT EXISTS trainings (
+    id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    function_id   INT UNSIGNED NOT NULL,
+    title         VARCHAR(150) NOT NULL,
+    description   TEXT         NULL,
+    resource_url  VARCHAR(300) NULL,          -- vídeo, PDF, link
+    file_id       INT UNSIGNED NULL,          -- material no repositório
+    sort_order    SMALLINT     NOT NULL DEFAULT 0,
+    required      TINYINT(1)   NOT NULL DEFAULT 1,   -- obrigatório para ficar "apto"
+    active        TINYINT(1)   NOT NULL DEFAULT 1,
+    created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_trainings_function (function_id, active, sort_order),
+    CONSTRAINT fk_trainings_function FOREIGN KEY (function_id) REFERENCES media_functions (id) ON DELETE CASCADE,
+    CONSTRAINT fk_trainings_file FOREIGN KEY (file_id) REFERENCES files (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS training_progress (
+    user_id      INT UNSIGNED NOT NULL,
+    training_id  INT UNSIGNED NOT NULL,
+    completed_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    validated_by INT UNSIGNED NULL,           -- coordenador que confirmou
+    validated_at DATETIME     NULL,
+    notes        VARCHAR(300) NULL,
+    PRIMARY KEY (user_id, training_id),
+    CONSTRAINT fk_progress_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_progress_training FOREIGN KEY (training_id) REFERENCES trainings (id) ON DELETE CASCADE,
+    CONSTRAINT fk_progress_validator FOREIGN KEY (validated_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------
 -- Dados iniciais
 -- ---------------------------------------------------------------------
 INSERT IGNORE INTO media_functions (name, slug, sort_order) VALUES
@@ -762,3 +921,19 @@ SELECT * FROM (
     SELECT 'Contatos e endereço atualizados', 70
 ) AS defaults
 WHERE NOT EXISTS (SELECT 1 FROM art_checklist_items);
+
+-- Checklist pré-culto inicial (edite em Escala → Checklist pré-culto)
+INSERT INTO checklist_items (function_id, label, sort_order)
+SELECT f.id, d.label, d.sort_order FROM media_functions f
+JOIN (
+    SELECT 'som' AS slug, 'Mesa ligada e canais testados (microfones, instrumentos, retorno)' AS label, 10 AS sort_order UNION ALL
+    SELECT 'som', 'Pilhas/baterias dos microfones sem fio conferidas', 20 UNION ALL
+    SELECT 'som', 'Passagem de som com o louvor', 30 UNION ALL
+    SELECT 'projecao', 'Letras dos louvores carregadas e revisadas', 10 UNION ALL
+    SELECT 'projecao', 'Vídeos e avisos do dia testados no telão', 20 UNION ALL
+    SELECT 'camera', 'Câmeras ligadas, enquadradas e com cartão/bateria', 10 UNION ALL
+    SELECT 'transmissao', 'Live agendada e link divulgado', 10 UNION ALL
+    SELECT 'transmissao', 'Áudio da transmissão testado', 20 UNION ALL
+    SELECT 'fotografia', 'Câmera com bateria e cartão livre', 10
+) AS d ON d.slug = f.slug
+WHERE NOT EXISTS (SELECT 1 FROM checklist_items);
