@@ -210,10 +210,10 @@ final class UserController
         }
         $temp = temp_password();
         User::setPassword($id, password_hash($temp, PASSWORD_DEFAULT), true);
-        Logger::audit('senha_redefinida', 'users', $id);
+        Logger::audit('senha_redefinida_admin', 'users', $id, null, ['por' => Auth::user()['name'], 'temporaria' => true, 'troca_obrigatoria' => true]);
         $_SESSION['_temp_password'] = ['name' => $user['name'], 'email' => $user['email'], 'password' => $temp];
-        flash('success', 'Senha temporária gerada.');
-        redirect('/usuarios/' . $id);
+        flash('success', 'Senha de ' . $user['name'] . ' redefinida com sucesso. A senha temporária abaixo é exibida só desta vez; a pessoa deverá trocá-la no primeiro acesso.');
+        redirect_back('/usuarios/' . $id);
     }
 
     public function toggleStatus(int $id): never

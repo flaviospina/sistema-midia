@@ -42,7 +42,7 @@ function env_bool(string $key, bool $default = false): bool
     return in_array($value, ['1', 'true', 'sim', 'yes', 'on'], true);
 }
 
-define('APP_VERSION', '4.0.0');
+define('APP_VERSION', '4.1.0');
 define('APP_CODE', 'midia'); // código deste sistema em user_roles
 define('APP_ENV', env('APP_ENV', 'production'));
 define('APP_NAME', env('APP_NAME', 'Central de Mídia ADMoema'));
@@ -101,6 +101,17 @@ define('SCHEDULE_ROTATION_DAYS', env_int('SCHEDULE_ROTATION_DAYS', 60));
 define('ART_MIN_DAYS', env_int('ART_MIN_DAYS', 10));
 define('ART_PASTORAL_FORMATS', array_values(array_filter(array_map('trim', explode(',', env('ART_PASTORAL_FORMATS', 'impresso,telao'))))));
 define('ART_FOLDER_NAME', 'Pedidos de arte');
+
+// E-mail
+define('MAIL_DRIVER', in_array(env('MAIL_DRIVER', 'mail'), ['mail', 'smtp', 'log'], true) ? env('MAIL_DRIVER', 'mail') : 'mail');
+define('MAIL_FROM', env('MAIL_FROM', DPO_CONTACT ?: 'no-reply@localhost'));
+define('MAIL_FROM_NAME', env('MAIL_FROM_NAME', APP_NAME));
+define('SMTP_HOST', env('SMTP_HOST'));
+define('SMTP_PORT', env_int('SMTP_PORT', 465));
+define('SMTP_ENCRYPTION', in_array(env('SMTP_ENCRYPTION', 'ssl'), ['ssl', 'tls', 'none'], true) ? env('SMTP_ENCRYPTION', 'ssl') : 'ssl');
+define('SMTP_USER', env('SMTP_USER'));
+define('SMTP_PASS', $_ENV['SMTP_PASS'] ?? '');
+define('PASSWORD_RESET_MINUTES', env_int('PASSWORD_RESET_MINUTES', 60));
 
 // Caminho base das URLs (ex.: "/midia"). Vem do BASE_URL; se vazio, é deduzido do script.
 define('BASE_PATH', (static function (): string {

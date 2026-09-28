@@ -54,10 +54,10 @@
 <div class="card">
   <div class="table-responsive">
     <table class="table table-hover mb-0 table-responsive-stack">
-      <thead class="table-light"><tr><th>Nome</th><th>Perfil</th><th>Funções</th><th>Contato</th><th>Situação</th></tr></thead>
+      <thead class="table-light"><tr><th>Nome</th><th>Perfil</th><th>Funções</th><th>Contato</th><th>Situação</th><?php if (Auth::can('users.manage')): ?><th></th><?php endif; ?></tr></thead>
       <tbody>
       <?php if (!$result['itens']): ?>
-        <tr><td colspan="5" class="text-center text-muted py-4">Nenhuma pessoa encontrada.</td></tr>
+        <tr><td colspan="6" class="text-center text-muted py-4">Nenhuma pessoa encontrada.</td></tr>
       <?php endif; ?>
       <?php foreach ($result['itens'] as $u): ?>
         <tr>
@@ -84,6 +84,16 @@
             <?php elseif ($u['member_status'] === 'em_treinamento'): ?><span class="badge text-bg-info">Em treinamento</span>
             <?php else: ?><span class="badge text-bg-success">Ativo</span><?php endif; ?>
           </td>
+          <?php if (Auth::can('users.manage')): ?>
+          <td class="text-end text-nowrap">
+            <a href="<?= url('/usuarios/' . (int) $u['id'] . '/editar') ?>" class="btn btn-sm btn-outline-secondary" title="Editar"><i class="bi bi-pencil"></i></a>
+            <?php if ($u['status'] === 'ativo' && (int) $u['id'] !== Auth::id()): ?>
+              <form method="post" action="<?= url('/usuarios/' . (int) $u['id'] . '/redefinir-senha') ?>" class="d-inline" data-confirm="Redefinir a senha de <?= e($u['name']) ?>? A senha atual deixará de funcionar e uma senha temporária será gerada.">
+                <?= Csrf::field() ?><button class="btn btn-sm btn-outline-primary" title="Redefinir senha"><i class="bi bi-key"></i></button>
+              </form>
+            <?php endif; ?>
+          </td>
+          <?php endif; ?>
         </tr>
       <?php endforeach; ?>
       </tbody>

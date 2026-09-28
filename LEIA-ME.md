@@ -46,6 +46,7 @@ Escolha uma das duas formas. A **opção A** é a recomendada (pastas internas f
    - `DPO_CONTACT` (e-mail exibido no termo de privacidade)
    - Limites do repositório (já vêm com os valores combinados): `UPLOAD_MAX_MB=2048`, cotas `QUOTA_GB_*`, limites de convidado `GUEST_*`, `STORAGE_ALERT_GB`.
    - Escala: `SCHEDULE_WEEKS_AHEAD` (semanas geradas à frente), `SCHEDULE_OVERLOAD_PER_MONTH` (alerta de sobrecarga), `SCHEDULE_ROTATION_DAYS` (janela do rodízio).
+   - E-mail (recuperação de senha): `MAIL_DRIVER=mail` usa o `mail()` do PHP e funciona no HostGator sem mais nada; para maior entregabilidade use `smtp` com a conta de e-mail do cPanel (`SMTP_HOST=mail.seudominio`, porta 465 `ssl` ou 587 `tls`, `SMTP_USER`, `SMTP_PASS`). `MAIL_FROM` deve ser um e-mail do próprio domínio.
    - Artes: `ART_MIN_DAYS` (prazo mínimo; abaixo disso o pedido é "urgente") e `ART_PASTORAL_FORMATS` (formatos que exigem aprovação do pastor; padrão `impresso,telao`).
 2. Se a URL não abrir as páginas internas (erro 404 do Apache), descomente `RewriteBase /midia/` em `public/.htaccess`.
 3. Confira em cPanel → **Selecionar versão do PHP** que a versão é 8.2+ e que `pdo_mysql`, `gd`, `fileinfo`, `mbstring`, `zip`, `exif` e `curl` estão marcados.
@@ -58,7 +59,7 @@ Escolha uma das duas formas. A **opção A** é a recomendada (pastas internas f
 1. Abra `https://admoema.com.br/midia`.
 2. Entre com `admin@admoema.com.br` / `TrocarAgora!2026`.
 3. O sistema exigirá **nova senha** e o **aceite do termo**.
-4. Em *Pessoas → Nova pessoa* cadastre a equipe. Para cada pessoa, o sistema gera uma senha temporária que é exibida **uma única vez** — envie por WhatsApp/pessoalmente.
+4. Em *Pessoas → Nova pessoa* cadastre a equipe. Para cada pessoa, o sistema gera uma senha temporária que é exibida **uma única vez** — envie por WhatsApp/pessoalmente. O admin pode redefinir a senha de qualquer pessoa pelo botão de chave na lista *Pessoas* (com confirmação); quem esqueceu a senha usa *Esqueci minha senha* na tela de login e recebe por e-mail um link de uso único, válido por `PASSWORD_RESET_MINUTES` minutos.
 5. Em *Ministérios* cadastre os ministérios e, no cadastro das pessoas, marque quem é líder de cada um.
 6. Em *Administração → Cultos fixos* cadastre os cultos semanais (dia, horário, modelo de escala): os eventos das próximas semanas são gerados na hora e o cron mantém a agenda cheia. Em *Administração → Modelos de escala* ajuste as vagas por função.
 7. Em *Pessoas → Funções* marque quem é **coordenador** de cada área: coordenadores só escalam as funções que coordenam (se não coordenarem nenhuma, escalam todas).

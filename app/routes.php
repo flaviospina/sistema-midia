@@ -13,7 +13,10 @@ $r->post('/trocar-senha', [AuthController::class, 'changePassword'], ['gate' => 
 $r->get('/termo', [AuthController::class, 'termsForm'], ['gate' => false]);
 $r->post('/termo', [AuthController::class, 'acceptTerms'], ['gate' => false]);
 $r->get('/termo-de-uso', [AuthController::class, 'termsPublic'], ['auth' => false]);
-$r->get('/esqueci-senha', [AuthController::class, 'forgot'], ['auth' => false]);
+$r->get('/esqueci-senha', [PasswordResetController::class, 'form'], ['guest' => true]);
+$r->post('/esqueci-senha', [PasswordResetController::class, 'request'], ['guest' => true]);
+$r->get('/redefinir-senha/{token}', [PasswordResetController::class, 'resetForm'], ['guest' => true]);
+$r->post('/redefinir-senha/{token}', [PasswordResetController::class, 'reset'], ['guest' => true]);
 $r->get('/cadastro', [RegisterController::class, 'form'], ['guest' => true]);
 $r->post('/cadastro', [RegisterController::class, 'store'], ['guest' => true]);
 

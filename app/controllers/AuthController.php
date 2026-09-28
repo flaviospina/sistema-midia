@@ -138,9 +138,4 @@ final class AuthController
         }
         redirect('/');
     }
-
-    public function forgot(): never
-    {
-        view('auth/forgot', ['title' => 'Esqueci minha senha'], 'layout_auth');
-    }
 }
