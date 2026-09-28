@@ -510,6 +510,139 @@ CREATE TABLE IF NOT EXISTS calendar_tokens (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
+-- Pedidos de arte e calendário de comunicação (Fase 4)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS art_checklist_items (
+    id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    label      VARCHAR(150) NOT NULL,
+    sort_order SMALLINT NOT NULL DEFAULT 0,
+    active     TINYINT(1) NOT NULL DEFAULT 1,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS art_requests (
+    id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    title           VARCHAR(150) NOT NULL,
+    requester_id    INT UNSIGNED NOT NULL,
+    ministry_id     INT UNSIGNED NULL,
+    event_id        INT UNSIGNED NULL,
+    briefing        TEXT NOT NULL,
+    texts           TEXT NULL,                          -- textos que devem constar na arte
+    formats         VARCHAR(100) NOT NULL,              -- lista: story,feed,telao,impresso
+    publish_on      DATE NOT NULL,                      -- data de publicação desejada
+    is_urgent       TINYINT(1) NOT NULL DEFAULT 0,      -- prazo menor que ART_MIN_DAYS
+    needs_pastoral  TINYINT(1) NOT NULL DEFAULT 0,
+    status          ENUM('recebido','em_producao','revisao_solicitante','aprovacao_midia','aprovacao_pastoral','aprovado','publicado','ajustes','cancelado') NOT NULL DEFAULT 'recebido',
+    ajustes_from    VARCHAR(30) NULL,                   -- etapa que pediu ajustes
+    designer_id     INT UNSIGNED NULL,
+    current_version INT UNSIGNED NOT NULL DEFAULT 0,
+    approved_at     DATETIME NULL,
+    published_at    DATETIME NULL,
+    cancelled_reason VARCHAR(300) NULL,
+    created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_art_status (status, publish_on),
+    KEY idx_art_requester (requester_id),
+    KEY idx_art_designer (designer_id),
+    KEY idx_art_ministry (ministry_id),
+    KEY idx_art_event (event_id),
+    CONSTRAINT fk_art_requester FOREIGN KEY (requester_id) REFERENCES users (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_art_ministry FOREIGN KEY (ministry_id) REFERENCES ministries (id) ON DELETE SET NULL,
+    CONSTRAINT fk_art_event FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE SET NULL,
+    CONSTRAINT fk_art_designer FOREIGN KEY (designer_id) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS art_request_versions (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    request_id  INT UNSIGNED NOT NULL,
+    version_no  SMALLINT UNSIGNED NOT NULL,
+    file_id     INT UNSIGNED NOT NULL,
+    notes       VARCHAR(500) NULL,
+    created_by  INT UNSIGNED NULL,
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_art_versions (request_id, version_no),
+    KEY idx_art_versions_file (file_id),
+    CONSTRAINT fk_art_versions_request FOREIGN KEY (request_id) REFERENCES art_requests (id) ON DELETE CASCADE,
+    CONSTRAINT fk_art_versions_file FOREIGN KEY (file_id) REFERENCES files (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_art_versions_creator FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS art_request_attachments (
+    request_id INT UNSIGNED NOT NULL,
+    file_id    INT UNSIGNED NOT NULL,
+    PRIMARY KEY (request_id, file_id),
+    CONSTRAINT fk_art_attachments_request FOREIGN KEY (request_id) REFERENCES art_requests (id) ON DELETE CASCADE,
+    CONSTRAINT fk_art_attachments_file FOREIGN KEY (file_id) REFERENCES files (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS art_request_comments (
+    id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    request_id INT UNSIGNED NOT NULL,
+    version_id INT UNSIGNED NULL,
+    user_id    INT UNSIGNED NULL,
+    kind       ENUM('comentario','historico') NOT NULL DEFAULT 'comentario',
+    body       TEXT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_art_comments_request (request_id, created_at),
+    CONSTRAINT fk_art_comments_request FOREIGN KEY (request_id) REFERENCES art_requests (id) ON DELETE CASCADE,
+    CONSTRAINT fk_art_comments_version FOREIGN KEY (version_id) REFERENCES art_request_versions (id) ON DELETE SET NULL,
+    CONSTRAINT fk_art_comments_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS approvals (
+    id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    request_id INT UNSIGNED NOT NULL,
+    version_id INT UNSIGNED NULL,
+    stage      ENUM('solicitante','midia','pastoral') NOT NULL,
+    decision   ENUM('aprovado','ajustes') NOT NULL,
+    user_id    INT UNSIGNED NULL,
+    notes      VARCHAR(1000) NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_approvals_request (request_id),
+    CONSTRAINT fk_approvals_request FOREIGN KEY (request_id) REFERENCES art_requests (id) ON DELETE CASCADE,
+    CONSTRAINT fk_approvals_version FOREIGN KEY (version_id) REFERENCES art_request_versions (id) ON DELETE SET NULL,
+    CONSTRAINT fk_approvals_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS art_request_checks (
+    request_id INT UNSIGNED NOT NULL,
+    item_id    INT UNSIGNED NOT NULL,
+    checked_by INT UNSIGNED NULL,
+    checked_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (request_id, item_id),
+    CONSTRAINT fk_art_checks_request FOREIGN KEY (request_id) REFERENCES art_requests (id) ON DELETE CASCADE,
+    CONSTRAINT fk_art_checks_item FOREIGN KEY (item_id) REFERENCES art_checklist_items (id) ON DELETE CASCADE,
+    CONSTRAINT fk_art_checks_user FOREIGN KEY (checked_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS publications (
+    id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    title          VARCHAR(150) NOT NULL,
+    channel        ENUM('instagram','facebook','youtube','whatsapp','telao','boletim','site','outro') NOT NULL DEFAULT 'instagram',
+    publish_at     DATETIME NOT NULL,
+    status         ENUM('planejado','publicado','cancelado') NOT NULL DEFAULT 'planejado',
+    request_id     INT UNSIGNED NULL,
+    event_id       INT UNSIGNED NULL,
+    file_id        INT UNSIGNED NULL,
+    responsible_id INT UNSIGNED NULL,
+    notes          VARCHAR(500) NULL,
+    link           VARCHAR(300) NULL,
+    published_at   DATETIME NULL,
+    published_by   INT UNSIGNED NULL,
+    created_by     INT UNSIGNED NULL,
+    created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at     DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_publications_at (publish_at, status),
+    KEY idx_publications_request (request_id),
+    CONSTRAINT fk_publications_request FOREIGN KEY (request_id) REFERENCES art_requests (id) ON DELETE SET NULL,
+    CONSTRAINT fk_publications_event FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE SET NULL,
+    CONSTRAINT fk_publications_file FOREIGN KEY (file_id) REFERENCES files (id) ON DELETE SET NULL,
+    CONSTRAINT fk_publications_responsible FOREIGN KEY (responsible_id) REFERENCES users (id) ON DELETE SET NULL,
+    CONSTRAINT fk_publications_publisher FOREIGN KEY (published_by) REFERENCES users (id) ON DELETE SET NULL,
+    CONSTRAINT fk_publications_creator FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------
 -- Dados iniciais
 -- ---------------------------------------------------------------------
 INSERT IGNORE INTO media_functions (name, slug, sort_order) VALUES
@@ -543,3 +676,21 @@ INSERT IGNORE INTO schedule_templates (id, name, description) VALUES (1, 'Culto 
 INSERT IGNORE INTO schedule_template_slots (template_id, function_id, quantity)
 SELECT 1, f.id, CASE f.slug WHEN 'camera' THEN 2 ELSE 1 END
   FROM media_functions f WHERE f.slug IN ('som','projecao','camera','transmissao','fotografia');
+
+-- Pasta do sistema para anexos e versões dos pedidos de arte (procurada pelo nome)
+INSERT INTO folders (name, visibility, is_system, sort_order, description)
+SELECT 'Pedidos de arte', 'midia', 1, 50, 'Anexos de briefing e versões das artes (criada pelo sistema)'
+ WHERE NOT EXISTS (SELECT 1 FROM folders WHERE name = 'Pedidos de arte' AND parent_id IS NULL);
+
+-- Checklist de identidade visual (edite em Artes → Checklist)
+INSERT INTO art_checklist_items (label, sort_order)
+SELECT * FROM (
+    SELECT 'Logo da igreja correto e legível' AS label, 10 AS sort_order UNION ALL
+    SELECT 'Fontes da identidade visual', 20 UNION ALL
+    SELECT 'Cores da paleta oficial', 30 UNION ALL
+    SELECT 'Ortografia e textos revisados', 40 UNION ALL
+    SELECT 'Data, horário e local conferidos com o evento', 50 UNION ALL
+    SELECT 'Dimensões corretas para cada formato', 60 UNION ALL
+    SELECT 'Contatos e endereço atualizados', 70
+) AS defaults
+WHERE NOT EXISTS (SELECT 1 FROM art_checklist_items);

@@ -33,6 +33,12 @@
         <?php if (Auth::can('files.browse')): ?>
           <li class="nav-item"><a class="nav-link" href="<?= url('/arquivos') ?>"><i class="bi bi-hdd-stack"></i> Arquivos</a></li>
         <?php endif; ?>
+        <?php if (Auth::can('art.request')): $ac = ArtRequest::countsForDashboard(); $an = $ac['minha_revisao'] + (Auth::can('art.approve_pastoral') && !Auth::is('admin') ? $ac['aprov_pastoral'] : 0) + (Auth::can('art.approve_media') ? $ac['aprov_midia'] : 0); ?>
+          <li class="nav-item"><a class="nav-link" href="<?= url('/artes') ?>"><i class="bi bi-brush"></i> Artes<?= $an ? ' <span class="badge text-bg-warning">' . $an . '</span>' : '' ?></a></li>
+        <?php endif; ?>
+        <?php if (Auth::can('publications.view')): ?>
+          <li class="nav-item"><a class="nav-link" href="<?= url('/comunicacao') ?>"><i class="bi bi-megaphone"></i> Comunicação</a></li>
+        <?php endif; ?>
         <?php if (Auth::can('files.moderate')): $qn = MediaFile::countQuarantine(); ?>
           <li class="nav-item"><a class="nav-link" href="<?= url('/moderacao') ?>"><i class="bi bi-shield-check"></i> Quarentena<?= $qn ? ' <span class="badge text-bg-warning">' . $qn . '</span>' : '' ?></a></li>
         <?php endif; ?>
@@ -46,6 +52,9 @@
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-gear"></i> Administração</a>
             <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="<?= url('/artes/atrasos') ?>">Artes: atrasos e prazos</a></li>
+              <li><a class="dropdown-item" href="<?= url('/artes/checklist') ?>">Artes: checklist de identidade</a></li>
+              <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item" href="<?= url('/escala/painel') ?>">Painel da escala</a></li>
               <li><a class="dropdown-item" href="<?= url('/recorrencias') ?>">Cultos fixos</a></li>
               <li><a class="dropdown-item" href="<?= url('/modelos') ?>">Modelos de escala</a></li>
@@ -67,6 +76,9 @@
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-gear"></i> Coordenação</a>
             <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="<?= url('/artes/atrasos') ?>">Artes: atrasos e prazos</a></li>
+              <li><a class="dropdown-item" href="<?= url('/artes/checklist') ?>">Artes: checklist de identidade</a></li>
+              <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item" href="<?= url('/escala/painel') ?>">Painel da escala</a></li>
               <li><a class="dropdown-item" href="<?= url('/recorrencias') ?>">Cultos fixos</a></li>
               <li><a class="dropdown-item" href="<?= url('/modelos') ?>">Modelos de escala</a></li>

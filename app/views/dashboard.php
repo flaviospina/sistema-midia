@@ -38,6 +38,12 @@
 <?php if (!empty($mySwaps)): ?>
   <div class="alert alert-info"><i class="bi bi-arrow-left-right"></i> Você tem <strong><?= count($mySwaps) ?></strong> pedido(s) de troca para responder. <a href="<?= url('/minha-escala') ?>" class="alert-link">Minha escala</a></div>
 <?php endif; ?>
+<?php if (!empty($art)): ?>
+  <?php if ($art['minha_revisao']): ?><div class="alert alert-info py-2"><i class="bi bi-brush"></i> <strong><?= $art['minha_revisao'] ?></strong> arte(s) aguardando a sua revisão. <a href="<?= url('/artes', ['status' => 'revisao_solicitante', 'meus' => 1]) ?>" class="alert-link">Ver</a></div><?php endif; ?>
+  <?php if (Auth::can('art.approve_media') && $art['aprov_midia']): ?><div class="alert alert-warning py-2"><i class="bi bi-brush"></i> <strong><?= $art['aprov_midia'] ?></strong> arte(s) aguardando aprovação da mídia<?= $art['sem_designer'] ? ' · ' . $art['sem_designer'] . ' pedido(s) sem designer' : '' ?><?= $art['atrasados'] ? ' · <strong>' . $art['atrasados'] . ' atrasado(s)</strong>' : '' ?>. <a href="<?= url('/artes/kanban') ?>" class="alert-link">Kanban</a></div><?php endif; ?>
+  <?php if (Auth::can('art.approve_pastoral') && $art['aprov_pastoral']): ?><div class="alert alert-warning py-2"><i class="bi bi-person-badge"></i> <strong><?= $art['aprov_pastoral'] ?></strong> arte(s) aguardando aprovação pastoral. <a href="<?= url('/artes', ['status' => 'aprovacao_pastoral']) ?>" class="alert-link">Ver</a></div><?php endif; ?>
+  <?php if (Auth::can('art.produce') && !Auth::can('art.approve_media') && $art['minha_producao']): ?><div class="alert alert-info py-2"><i class="bi bi-brush"></i> Você tem <strong><?= $art['minha_producao'] ?></strong> arte(s) em produção. <a href="<?= url('/artes/kanban') ?>" class="alert-link">Kanban</a></div><?php endif; ?>
+<?php endif; ?>
 <?php if (!empty($quarantine)): ?>
   <div class="alert alert-warning"><i class="bi bi-shield-check"></i> Há <strong><?= $quarantine ?></strong> arquivo(s) aguardando moderação. <a href="<?= url('/moderacao') ?>" class="alert-link">Abrir quarentena</a></div>
 <?php endif; ?>
@@ -78,6 +84,18 @@
 <?php elseif (!empty($upcoming)): ?>
   <div class="card mb-3"><div class="card-header bg-white fw-semibold d-flex justify-content-between"><span>Próximos eventos</span><a href="<?= url('/eventos') ?>" class="small">calendário</a></div>
     <ul class="list-group list-group-flush small"><?php foreach ($upcoming as $ev): ?><li class="list-group-item d-flex justify-content-between"><a href="<?= url('/eventos/' . (int) $ev['id']) ?>"><?= e($ev['title']) ?></a><span class="text-muted"><?= e(format_date($ev['starts_at'], 'd/m H:i')) ?></span></li><?php endforeach; ?></ul></div>
+<?php endif; ?>
+<?php if (!empty($artMine) || !empty($pubs)): ?>
+<div class="row g-3 mb-3">
+  <?php if (!empty($artMine)): ?>
+  <div class="col-lg-6"><div class="card h-100"><div class="card-header bg-white fw-semibold d-flex justify-content-between"><span>Meus pedidos de arte</span><a href="<?= url('/artes') ?>" class="small">todos</a></div>
+    <ul class="list-group list-group-flush small"><?php foreach ($artMine as $r): ?><li class="list-group-item d-flex justify-content-between align-items-center gap-2"><a href="<?= url('/artes/' . (int) $r['id']) ?>"><?= e($r['title']) ?></a><span><span class="text-muted me-1"><?= e(format_date($r['publish_on'], 'd/m')) ?></span><span class="badge text-bg-<?= ArtRequest::STATUS_COLORS[$r['status']] ?>"><?= e(ArtRequest::STATUSES[$r['status']]) ?></span></span></li><?php endforeach; ?></ul></div></div>
+  <?php endif; ?>
+  <?php if (!empty($pubs)): ?>
+  <div class="col-lg-6"><div class="card h-100"><div class="card-header bg-white fw-semibold d-flex justify-content-between"><span>Publicações dos próximos 7 dias</span><a href="<?= url('/comunicacao') ?>" class="small">calendário</a></div>
+    <ul class="list-group list-group-flush small"><?php foreach ($pubs as $p): ?><li class="list-group-item d-flex justify-content-between"><span><i class="bi <?= Publication::CHANNEL_ICONS[$p['channel']] ?>"></i> <?= e($p['title']) ?></span><span class="text-muted <?= $p['publish_at'] < date('Y-m-d H:i:s') ? 'text-danger' : '' ?>"><?= e(format_date($p['publish_at'], 'd/m H:i')) ?></span></li><?php endforeach; ?></ul></div></div>
+  <?php endif; ?>
+</div>
 <?php endif; ?>
 <?php if (!empty($recentFiles)): ?>
   <div class="d-flex justify-content-between align-items-center mb-2"><h2 class="h6 text-muted mb-0">Arquivos recentes</h2><a href="<?= url('/arquivos') ?>" class="small">Ver repositório</a></div>

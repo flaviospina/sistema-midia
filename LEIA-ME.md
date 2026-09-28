@@ -1,4 +1,4 @@
-# Central de Mídia ADMoema — Instalação (Fases 1 a 3)
+# Central de Mídia ADMoema — Instalação (Fases 1 a 4)
 
 Sistema do Ministério de Multimídia · AD Ministério do Belém · Setor 124 Moema.
 Requisitos: PHP 8.2+ (com PDO MySQL, GD, fileinfo, mbstring, zip, exif, curl), MySQL 5.7+/MariaDB 10.2+, Apache com `mod_rewrite`.
@@ -11,6 +11,7 @@ Requisitos: PHP 8.2+ (com PDO MySQL, GD, fileinfo, mbstring, zip, exif, curl), M
    - Cria o administrador inicial `admin@admoema.com.br` com senha temporária **`TrocarAgora!2026`** (troca obrigatória no primeiro acesso). Para outro e-mail, edite o `INSERT` final antes de importar ou altere depois em *Pessoas*.
    - Cria as pastas iniciais do repositório: Eventos, Ministérios, Identidade Visual e Artes Finais.
    - Cria o modelo de escala "Culto padrão" (som, projeção, 2 câmeras, transmissão, fotografia).
+   - Cria a pasta do sistema "Pedidos de arte" e o checklist de identidade visual padrão (7 itens).
 
 ## 2. Arquivos
 
@@ -45,6 +46,7 @@ Escolha uma das duas formas. A **opção A** é a recomendada (pastas internas f
    - `DPO_CONTACT` (e-mail exibido no termo de privacidade)
    - Limites do repositório (já vêm com os valores combinados): `UPLOAD_MAX_MB=2048`, cotas `QUOTA_GB_*`, limites de convidado `GUEST_*`, `STORAGE_ALERT_GB`.
    - Escala: `SCHEDULE_WEEKS_AHEAD` (semanas geradas à frente), `SCHEDULE_OVERLOAD_PER_MONTH` (alerta de sobrecarga), `SCHEDULE_ROTATION_DAYS` (janela do rodízio).
+   - Artes: `ART_MIN_DAYS` (prazo mínimo; abaixo disso o pedido é "urgente") e `ART_PASTORAL_FORMATS` (formatos que exigem aprovação do pastor; padrão `impresso,telao`).
 2. Se a URL não abrir as páginas internas (erro 404 do Apache), descomente `RewriteBase /midia/` em `public/.htaccess`.
 3. Confira em cPanel → **Selecionar versão do PHP** que a versão é 8.2+ e que `pdo_mysql`, `gd`, `fileinfo`, `mbstring`, `zip`, `exif` e `curl` estão marcados.
    - `UPLOAD_CHUNK_MB` (padrão 5) precisa ser **menor** que `post_max_size` e `upload_max_filesize` do PHP (veja em *Opções do PHP*; se estiverem em 2M, reduza `UPLOAD_CHUNK_MB=1`).
@@ -83,21 +85,28 @@ URL: `https://admoema.com.br/midia/enviar`. Gere o QR Code para o telão/boletim
 - **Minha escala**: cada membro confirma ou recusa (com motivo), registra **indisponibilidades** (data, período ou dia fixo da semana) e pode **pedir troca** com um colega da mesma função — o colega aceita e o coordenador aprova. Link ICS pessoal para assinar no Google Agenda/iPhone.
 - **Painel da escala**: vagas abertas nos próximos 21 dias, recusas, sobrecarga e trocas pendentes.
 
-## 8. Perfis de acesso
+## 8. Pedidos de arte e comunicação
+
+- **Quem pede**: líder de ministério (só do seu ministério), pastor ou equipe de mídia, em *Artes → Novo pedido*: título, ministério, evento vinculado, briefing, textos obrigatórios, formatos (story, feed, telão, impresso) e data de publicação. Menos de `ART_MIN_DAYS` dias = pedido **urgente** (aceito, mas sinalizado). Referências são anexadas na página do pedido.
+- **Fluxo**: `recebido → em produção → revisão do solicitante → aprovação da mídia → (aprovação pastoral) → aprovado → publicado`, com *ajustes* a qualquer momento e *cancelado*. O designer assume o pedido (ou o coordenador define), envia versões (cada versão é um arquivo do repositório, na pasta "Pedidos de arte"), o solicitante aprova ou pede ajustes com comentário; a mídia só aprova com o **checklist de identidade visual** completo; formatos em `ART_PASTORAL_FORMATS` passam pelo pastor.
+- **Kanban** (*Artes → Kanban*) para a equipe; **Atrasos e prazos** para a coordenação (publicação em até 3 dias sem aprovação, sem designer, ministérios que mais pedem).
+- **Calendário de comunicação** (*Comunicação*): ao aprovar uma arte, entra uma publicação por formato (story/feed → Instagram, telão, impresso → boletim) na data pedida. A equipe marca como publicado (com link opcional); quando todas as publicações do pedido estão feitas, o pedido vira *publicado*. Também aceita publicações avulsas (aviso no WhatsApp, vídeo no YouTube…).
+
+## 9. Perfis de acesso
 
 | Perfil | Pode |
 |---|---|
-| admin | Tudo, inclusive ver originais com EXIF, conteúdo "restrito" e escalar qualquer função |
-| coordenador | Pessoas, funções, pastas, quarentena, restrições, links, armazenamento; eventos, cultos fixos, modelos e escala das funções que coordena |
-| membro_midia | Enviar direto para pastas da equipe, restrições de imagem, links; minha escala, indisponibilidades, trocas |
-| lider_ministerio | Ver e enviar na pasta do seu ministério; ver eventos |
-| pastor | Ver eventos e a escala montada; ver o que for "todos os usuários" |
+| admin | Tudo, inclusive ver originais com EXIF, conteúdo "restrito", escalar qualquer função, aprovar artes (mídia e pastoral) |
+| coordenador | Pessoas, funções, pastas, quarentena, restrições, links, armazenamento; eventos, cultos fixos, modelos e escala das funções que coordena; aprovação de artes pela mídia, designer, atrasos, checklist |
+| membro_midia | Enviar direto para pastas da equipe, restrições de imagem, links; minha escala, indisponibilidades, trocas; produzir artes (kanban, versões), calendário de comunicação |
+| lider_ministerio | Ver e enviar na pasta do seu ministério; ver eventos; abrir e acompanhar pedidos de arte do seu ministério; ver as publicações do seu ministério |
+| pastor | Ver eventos e a escala montada; abrir pedidos; aprovação pastoral de artes; calendário de comunicação |
 | membro_igreja | Ver eventos; ver o que for "todos os usuários"; envios vão para a quarentena |
 | Convidado (sem login) | Só a página `/enviar` |
 
 Visibilidade das pastas: **restrito** (admin) · **equipe de mídia** · **equipe + ministério dono** · **todos os usuários logados**. Subpastas herdam; um arquivo pode sobrescrever a da pasta. Arquivo marcado "contém pessoa com restrição de imagem" fica sempre restrito.
 
-## 9. Onde ficam as coisas
+## 10. Onde ficam as coisas
 
 - Arquivos do repositório: `storage/files/AAAA/MM/` (nome aleatório; o nome original fica só no banco). Miniaturas em `storage/thumbs`, versão exibida sem EXIF/GPS em `storage/display`, quarentena em `storage/quarantine`. Nada disso é acessível por link direto: toda entrega passa por `/arquivos/{id}/download` com checagem de permissão e registro em `download_log`.
 - Fotos de perfil: `storage/photos/`. Fotos de referência de restrições: `storage/restrictions/`.
@@ -105,6 +114,6 @@ Visibilidade das pastas: **restrito** (admin) · **equipe de mídia** · **equip
 - Trilha de auditoria: *Administração → Auditoria*. Solicitações LGPD: *Administração → Privacidade*.
 - Espaço usado por pasta, tipo e pessoa: *Administração → Armazenamento*.
 
-## 10. Atualização de versão
+## 11. Atualização de versão
 
 Substitua os arquivos (menos `.env` e `storage/`) e importe novamente `sql/schema.sql`. Se o termo de privacidade mudar, aumente `TERMS_VERSION` no `.env`: todos serão convidados a aceitar a nova versão no próximo acesso.

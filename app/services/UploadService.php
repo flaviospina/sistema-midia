@@ -36,7 +36,15 @@ final class UploadService
             $folderId = null;
         } else {
             $userId = (int) $owner['user_id'];
-            if ($folderId !== null && !Access::canUploadTo($folderId)) {
+            if (!empty($meta['art_request_id'])) {
+                // Anexo/versão de pedido de arte: pasta do sistema, sem quarentena (permissão checada pelo pedido)
+                $req = ctype_digit((string) $meta['art_request_id']) ? ArtRequest::find((int) $meta['art_request_id']) : null;
+                $kind = ($meta['art_kind'] ?? '') === 'versao' ? 'versao' : 'anexo';
+                if (!$req || !ArtRequest::canView($req) || !ArtWorkflow::canUpload($req, $kind)) {
+                    throw new InvalidArgumentException('Você não pode enviar arquivos para este pedido de arte.');
+                }
+                $folderId = ArtRequest::folderId();
+            } elseif ($folderId !== null && !Access::canUploadTo($folderId)) {
                 throw new InvalidArgumentException('Você não pode enviar arquivos para esta pasta.');
             }
             $quota = Access::quotaBytes();
@@ -199,7 +207,8 @@ final class UploadService
 
         // Quem envia diretamente para uma pasta permitida: aprovado; caso contrário, quarentena
         $folderId = $session['folder_id'] ? (int) $session['folder_id'] : null;
-        $direct = !$isGuest && $folderId !== null && Access::canUploadTo($folderId);
+        $artRequest = !$isGuest && ctype_digit((string) ($meta['art_request_id'] ?? '')) ? ArtRequest::find((int) $meta['art_request_id']) : null;
+        $direct = !$isGuest && $folderId !== null && (Access::canUploadTo($folderId) || $artRequest !== null);
         $status = $direct ? 'aprovado' : 'quarentena';
         if (!$direct) {
             $folderId = null;
@@ -251,6 +260,17 @@ final class UploadService
         ]);
         if (!$isGuest && !empty($meta['tags'])) {
             Tag::sync($fileId, (string) $meta['tags']);
+        }
+        if ($artRequest !== null) {
+            if (($meta['art_kind'] ?? '') === 'versao') {
+                $vid = ArtRequest::addVersion((int) $artRequest['id'], $fileId, mb_substr(trim((string) ($meta['description'] ?? '')), 0, 500) ?: null, (int) $session['user_id']);
+                ArtWorkflow::log((int) $artRequest['id'], 'Versão ' . (int) Database::value('SELECT version_no FROM art_request_versions WHERE id = :id', ['id' => $vid]) . ' enviada: ' . $session['original_name'], $vid);
+                if ($artRequest['status'] === 'ajustes') {
+                    ArtRequest::set((int) $artRequest['id'], ['status' => 'em_producao']);
+                }
+            } else {
+                ArtRequest::addAttachment((int) $artRequest['id'], $fileId);
+            }
         }
         UploadSession::setStatus($session['id'], 'concluido', ['file_id' => $fileId, 'assembled_path' => null]);
         self::removeDir(self::dir($session['id']));

@@ -182,4 +182,30 @@ $r->post('/modelos', [RecurrenceController::class, 'templateStore'], ['perm' => 
 $r->get('/modelos/{id}/editar', [RecurrenceController::class, 'templateEdit'], ['perm' => 'events.manage']);
 $r->post('/modelos/{id}', [RecurrenceController::class, 'templateUpdate'], ['perm' => 'events.manage']);
 
+// ---------------------------------------------------------------------
+// Pedidos de arte e calendário de comunicação (Fase 4)
+// ---------------------------------------------------------------------
+$r->get('/artes', [ArtController::class, 'index'], ['perm' => 'art.request']);
+$r->get('/artes/kanban', [ArtController::class, 'kanban'], ['perm' => 'art.produce']);
+$r->get('/artes/atrasos', [ArtController::class, 'delays'], ['perm' => 'art.manage']);
+$r->get('/artes/checklist', [ArtController::class, 'checklistConfig'], ['perm' => 'art.manage']);
+$r->post('/artes/checklist', [ArtController::class, 'checklistSave'], ['perm' => 'art.manage']);
+$r->get('/artes/novo', [ArtController::class, 'create'], ['perm' => 'art.request']);
+$r->post('/artes', [ArtController::class, 'store'], ['perm' => 'art.request']);
+$r->get('/artes/{id}', [ArtController::class, 'show'], ['perm' => 'art.request']);
+$r->get('/artes/{id}/editar', [ArtController::class, 'edit'], ['perm' => 'art.request']);
+$r->post('/artes/{id}', [ArtController::class, 'update'], ['perm' => 'art.request']);
+$r->post('/artes/{id}/acao', [ArtController::class, 'action'], ['perm' => 'art.request']);
+$r->post('/artes/{id}/designer', [ArtController::class, 'assign'], ['perm' => 'art.manage']);
+$r->post('/artes/{id}/comentar', [ArtController::class, 'comment'], ['perm' => 'art.request']);
+$r->post('/artes/{id}/checklist', [ArtController::class, 'checklist'], ['perm' => 'art.produce']);
+
+$r->get('/comunicacao', [PublicationController::class, 'index'], ['perm' => 'publications.view']);
+$r->get('/comunicacao/nova', [PublicationController::class, 'create'], ['perm' => 'publications.manage']);
+$r->post('/comunicacao', [PublicationController::class, 'store'], ['perm' => 'publications.manage']);
+$r->get('/comunicacao/{id}/editar', [PublicationController::class, 'edit'], ['perm' => 'publications.manage']);
+$r->post('/comunicacao/{id}', [PublicationController::class, 'update'], ['perm' => 'publications.manage']);
+$r->post('/comunicacao/{id}/publicar', [PublicationController::class, 'publish'], ['perm' => 'publications.manage']);
+$r->post('/comunicacao/{id}/cancelar', [PublicationController::class, 'cancel'], ['perm' => 'publications.manage']);
+
 return $r;

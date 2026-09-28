@@ -44,6 +44,15 @@ final class Auth
         'schedule.manage'     => ['admin', 'coordenador'],
         'schedule.self'       => ['admin', 'coordenador', 'membro_midia'],
         'unavailability.view' => ['admin', 'coordenador'],
+        // Pedidos de arte e comunicação
+        'art.request'         => ['admin', 'coordenador', 'membro_midia', 'lider_ministerio', 'pastor'],
+        'art.produce'         => ['admin', 'coordenador', 'membro_midia'],
+        'art.manage'          => ['admin', 'coordenador'],
+        'art.approve_media'   => ['admin', 'coordenador'],
+        'art.approve_pastoral'=> ['admin', 'pastor'],
+        'art.view_all'        => ['admin', 'coordenador', 'membro_midia', 'pastor'],
+        'publications.view'   => ['admin', 'coordenador', 'membro_midia', 'pastor', 'lider_ministerio'],
+        'publications.manage' => ['admin', 'coordenador', 'membro_midia'],
     ];
 
     private static ?array $user = null;

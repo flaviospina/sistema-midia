@@ -41,6 +41,13 @@ final class DashboardController
         if (Auth::can('events.view')) {
             $data['upcoming'] = Event::upcoming(7, 6);
         }
+        if (Auth::can('art.request')) {
+            $data['art'] = ArtRequest::countsForDashboard();
+            $data['artMine'] = ArtRequest::search(['mine' => true], 1, 6)['itens'];
+        }
+        if (Auth::can('publications.manage')) {
+            $data['pubs'] = Publication::upcoming(7);
+        }
         if (Auth::can('files.moderate')) {
             $data['quarantine'] = MediaFile::countQuarantine();
         }

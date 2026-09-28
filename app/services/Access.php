@@ -52,6 +52,12 @@ final class Access
             return false;
         }
         $mine = $file['uploaded_by'] !== null && (int) $file['uploaded_by'] === Auth::id();
+        if (!empty($file['art_request_id']) && $file['status'] === 'aprovado') {
+            $req = ArtRequest::find((int) $file['art_request_id']);
+            if ($req && ArtRequest::canView($req)) {
+                return true;
+            }
+        }
         if ($file['status'] === 'lixeira') {
             return Auth::can('files.moderate') || $mine;
         }

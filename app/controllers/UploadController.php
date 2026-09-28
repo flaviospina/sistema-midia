@@ -41,6 +41,7 @@ final class UploadController
             'title' => (string) ($in['title'] ?? ''), 'description' => (string) ($in['description'] ?? ''), 'tags' => (string) ($in['tags'] ?? ''),
             'event' => (string) ($in['event'] ?? ''), 'category' => (string) ($in['category'] ?? ''), 'visibility' => (string) ($in['visibility'] ?? ''),
             'event_id' => (string) ($in['event_id'] ?? ''),
+            'art_request_id' => (string) ($in['art_request_id'] ?? ''), 'art_kind' => (string) ($in['art_kind'] ?? ''),
         ];
         $folderId = isset($in['folder_id']) && ctype_digit((string) $in['folder_id']) ? (int) $in['folder_id'] : null;
         try {
@@ -91,7 +92,7 @@ final class UploadController
             'thumbnail' => (string) ($in['thumbnail'] ?? ''), 'duration' => $in['duration'] ?? null,
             'width' => $in['width'] ?? null, 'height' => $in['height'] ?? null,
         ];
-        foreach (['title', 'description', 'tags', 'event', 'category', 'visibility', 'event_id'] as $k) {
+        foreach (['title', 'description', 'tags', 'event', 'category', 'visibility', 'event_id', 'art_request_id', 'art_kind'] as $k) {
             if (isset($in[$k]) && is_string($in[$k])) {
                 $meta[$k] = $in[$k];
             }

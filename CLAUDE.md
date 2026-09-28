@@ -176,7 +176,7 @@ Frequência, recusas, sobrecarga, pedidos atrasados, ministérios que mais deman
 1. ~~URL final e login compartilhado~~ **Decidido (Fase 1):** `admoema.com.br/midia`; tabela `users` + `user_roles(app_code)` e cookie `ADMOEMA_SID` com path `/`, prontos para SSO com `/pix` e `/biblio`.
 2. ~~Arquivos pesados~~ **Decidido (Fase 2):** só HostGator (`LocalDriver`); a interface `StorageDriver` fica pronta para um `GoogleDriveDriver` na Fase 5, se aprovado.
 3. ~~Limites~~ **Decidido (Fase 2):** 2 GB por arquivo; cota 20 GB para equipe de mídia, 2 GB para os demais perfis, admin sem limite; convidado 500 MB/arquivo, 30 arquivos/hora e 500 MB/dia por IP. Tudo no `.env`.
-4. Quais tipos de arte exigem aprovação pastoral.
+4. ~~Quais tipos de arte exigem aprovação pastoral~~ **Decidido (Fase 4):** por formato, configurável em `ART_PASTORAL_FORMATS` no `.env` (padrão `impresso,telao`); o admin pode exigir/dispensar caso a caso ao editar o pedido.
 5. ~~Se `membro_igreja` terá login~~ **Decidido (Fase 1):** tem login; autocadastro em `/cadastro` com aprovação pela mídia.
 
 ## 9. Checklist de segurança (toda fase)

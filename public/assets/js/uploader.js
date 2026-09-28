@@ -88,7 +88,7 @@
   Uploader.prototype.meta = function () {
     var m = {};
     if (!this.metaForm) return m;
-    ['title', 'description', 'tags', 'event', 'event_id', 'category', 'visibility', 'folder_id'].forEach(function (k) {
+    ['title', 'description', 'tags', 'event', 'event_id', 'category', 'visibility', 'folder_id', 'art_request_id', 'art_kind'].forEach(function (k) {
       var el = this.metaForm.querySelector('[name="' + k + '"]');
       if (el) m[k] = el.value;
     }, this);
@@ -160,6 +160,9 @@
     this.items.forEach(function (i) { if (i.state === 'ok') done++; if (i.state === 'erro') err++; });
     this.summary.textContent = total ? (done + ' de ' + total + ' concluído(s)' + (err ? ', ' + err + ' com erro' : '')) : '';
     this.root.dispatchEvent(new CustomEvent('uploader:change', { detail: { total: total, done: done, err: err } }));
+    if (total > 0 && done + err === total && this.root.dataset.reloadOnDone !== undefined && done > 0) {
+      setTimeout(function () { window.location.reload(); }, 800);
+    }
   };
 
   Uploader.prototype.pump = function () {

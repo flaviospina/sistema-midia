@@ -5,7 +5,8 @@
      data-max="<?= (int) $maxBytes ?>"
      data-allowed="<?= e(implode(',', FileTypes::allowedExtensions())) ?>"
      data-file-base="<?= url('/arquivos/') ?>"
-     <?= !empty($metaFormId) ? 'data-meta-form="' . e($metaFormId) . '"' : '' ?>>
+     <?= !empty($metaFormId) ? 'data-meta-form="' . e($metaFormId) . '"' : '' ?>
+     <?= !empty($reloadOnDone) ? 'data-reload-on-done' : '' ?>>
   <div class="dropzone" data-dropzone>
     <i class="bi bi-cloud-arrow-up fs-1 text-primary"></i>
     <div class="fw-semibold">Arraste os arquivos aqui ou toque para escolher</div>
