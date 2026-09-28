@@ -1,0 +1,97 @@
+{
+  "name": "Central de Mídia — respostas do WhatsApp (entrada)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "midia-whatsapp-entrada",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "b1",
+      "name": "Webhook Evolution (messages.upsert)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "midia-whatsapp-entrada"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrai telefone e texto do evento messages.upsert da Evolution API; ignora mensagens enviadas por nós e grupos\nconst b = $input.first().json.body || {};\nconst d = b.data || {};\nconst key = d.key || {};\nif (key.fromMe || !key.remoteJid || key.remoteJid.endsWith('@g.us')) { return []; }\nconst phone = key.remoteJid.replace(/@.*/, '');\nconst m = d.message || {};\nconst text = m.conversation || (m.extendedTextMessage && m.extendedTextMessage.text) || (m.buttonsResponseMessage && m.buttonsResponseMessage.selectedDisplayText) || '';\nif (!text) { return []; }\nreturn [{ json: { phone, text } }];"
+      },
+      "id": "b2",
+      "name": "Extrair telefone e texto",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://admoema.com.br/midia/api/n8n/entrada",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Webhook-Secret", "value": "COLOQUE_AQUI_O_N8N_INBOUND_SECRET_DO_ENV" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ phone: $json.phone, text: $json.text }) }}",
+        "options": {}
+      },
+      "id": "b3",
+      "name": "Central de Mídia: /api/n8n/entrada",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            { "id": "c2", "leftValue": "={{ $json.data.reply }}", "rightValue": "", "operator": { "type": "string", "operation": "notEmpty", "singleValue": true } }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b4",
+      "name": "Tem resposta?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [720, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://SUA-EVOLUTION-API/message/sendText/SUA_INSTANCIA",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "SUA_APIKEY_DA_EVOLUTION" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ number: $('Extrair telefone e texto').item.json.phone, text: $json.data.reply }) }}",
+        "options": {}
+      },
+      "id": "b5",
+      "name": "Evolution API: responder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [960, -80]
+    }
+  ],
+  "connections": {
+    "Webhook Evolution (messages.upsert)": { "main": [[{ "node": "Extrair telefone e texto", "type": "main", "index": 0 }]] },
+    "Extrair telefone e texto": { "main": [[{ "node": "Central de Mídia: /api/n8n/entrada", "type": "main", "index": 0 }]] },
+    "Central de Mídia: /api/n8n/entrada": { "main": [[{ "node": "Tem resposta?", "type": "main", "index": 0 }]] },
+    "Tem resposta?": { "main": [[{ "node": "Evolution API: responder", "type": "main", "index": 0 }], []] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

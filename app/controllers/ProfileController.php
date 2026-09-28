@@ -14,6 +14,7 @@ final class ProfileController
             'ministries' => User::ministries((int) $user['id']),
             'consents'   => Consent::forUser((int) $user['id']),
             'requests'   => DataRequest::forUser((int) $user['id']),
+            'notifyWa'   => Setting::userPref((int) $user['id'], 'whatsapp', '1') === '1',
         ]);
     }
 
@@ -29,6 +30,7 @@ final class ProfileController
         }
         $whatsapp = input('whatsapp') !== '' ? Validator::normalizePhone(input('whatsapp')) : null;
         User::updateSelf((int) $user['id'], input('name'), $whatsapp);
+        Setting::setUserPref((int) $user['id'], 'whatsapp', input('notify_whatsapp') === '1' ? '1' : '0');
         try {
             if (input('remove_photo') === '1' && $user['photo_path']) {
                 Photo::delete($user['photo_path']);

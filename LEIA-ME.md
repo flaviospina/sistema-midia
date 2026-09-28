@@ -1,4 +1,4 @@
-# Central de Mídia ADMoema — Instalação (Fases 1 a 4)
+# Central de Mídia ADMoema — Instalação (Fases 1 a 5)
 
 Sistema do Ministério de Multimídia · AD Ministério do Belém · Setor 124 Moema.
 Requisitos: PHP 8.2+ (com PDO MySQL, GD, fileinfo, mbstring, zip, exif, curl), MySQL 5.7+/MariaDB 10.2+, Apache com `mod_rewrite`.
@@ -12,6 +12,7 @@ Requisitos: PHP 8.2+ (com PDO MySQL, GD, fileinfo, mbstring, zip, exif, curl), M
    - Cria as pastas iniciais do repositório: Eventos, Ministérios, Identidade Visual e Artes Finais.
    - Cria o modelo de escala "Culto padrão" (som, projeção, 2 câmeras, transmissão, fotografia).
    - Cria a pasta do sistema "Pedidos de arte" e o checklist de identidade visual padrão (7 itens).
+   - Cria as tabelas de integração (`settings`, `user_preferences`, `notifications`, `inbound_messages`).
 
 ## 2. Arquivos
 
@@ -47,6 +48,7 @@ Escolha uma das duas formas. A **opção A** é a recomendada (pastas internas f
    - Limites do repositório (já vêm com os valores combinados): `UPLOAD_MAX_MB=2048`, cotas `QUOTA_GB_*`, limites de convidado `GUEST_*`, `STORAGE_ALERT_GB`.
    - Escala: `SCHEDULE_WEEKS_AHEAD` (semanas geradas à frente), `SCHEDULE_OVERLOAD_PER_MONTH` (alerta de sobrecarga), `SCHEDULE_ROTATION_DAYS` (janela do rodízio).
    - E-mail (recuperação de senha): `MAIL_DRIVER=mail` usa o `mail()` do PHP e funciona no HostGator sem mais nada; para maior entregabilidade use `smtp` com a conta de e-mail do cPanel (`SMTP_HOST=mail.seudominio`, porta 465 `ssl` ou 587 `tls`, `SMTP_USER`, `SMTP_PASS`). `MAIL_FROM` deve ser um e-mail do próprio domínio.
+   - n8n/WhatsApp: `N8N_WEBHOOK_URL` e `N8N_WEBHOOK_SECRET` (saída), `N8N_INBOUND_SECRET` (entrada), `NOTIFY_ENABLED`, `NOTIFY_DAILY_HOUR` (hora dos lembretes). Veja a seção 9.
    - Artes: `ART_MIN_DAYS` (prazo mínimo; abaixo disso o pedido é "urgente") e `ART_PASTORAL_FORMATS` (formatos que exigem aprovação do pastor; padrão `impresso,telao`).
 2. Se a URL não abrir as páginas internas (erro 404 do Apache), descomente `RewriteBase /midia/` em `public/.htaccess`.
 3. Confira em cPanel → **Selecionar versão do PHP** que a versão é 8.2+ e que `pdo_mysql`, `gd`, `fileinfo`, `mbstring`, `zip`, `exif` e `curl` estão marcados.
@@ -67,11 +69,14 @@ Escolha uma das duas formas. A **opção A** é a recomendada (pastas internas f
 
 ## 5. Cron (recomendado)
 
-cPanel → **Cron Jobs**, uma vez por dia (ex.: 03:00):
+cPanel → **Cron Jobs**, dois comandos:
 
 ```
-/usr/local/bin/php /home/USUARIO/midia_app/cron/limpeza.php
+0 3 * * *    /usr/local/bin/php /home/USUARIO/midia_app/cron/limpeza.php
+*/5 * * * *  /usr/local/bin/php /home/USUARIO/midia_app/cron/notificacoes.php
 ```
+
+O segundo envia a fila de avisos ao n8n (com retentativas), agrupa os avisos de quarentena e, uma vez por dia a partir de `NOTIFY_DAILY_HOUR`, manda o lembrete de escala do dia seguinte e as publicações do dia.
 
 Faz: limpeza de tentativas de login, anonimização de cadastros pendentes (90 dias), remoção de uploads não concluídos (24 h), exclusão de rejeitados (7 dias) e da lixeira (30 dias), links vencidos, alerta de espaço, logs antigos, **geração dos cultos fixos** e encerramento dos eventos passados.
 
@@ -93,7 +98,17 @@ URL: `https://admoema.com.br/midia/enviar`. Gere o QR Code para o telão/boletim
 - **Kanban** (*Artes → Kanban*) para a equipe; **Atrasos e prazos** para a coordenação (publicação em até 3 dias sem aprovação, sem designer, ministérios que mais pedem).
 - **Calendário de comunicação** (*Comunicação*): ao aprovar uma arte, entra uma publicação por formato (story/feed → Instagram, telão, impresso → boletim) na data pedida. A equipe marca como publicado (com link opcional); quando todas as publicações do pedido estão feitas, o pedido vira *publicado*. Também aceita publicações avulsas (aviso no WhatsApp, vídeo no YouTube…).
 
-## 9. Perfis de acesso
+## 9. Avisos por WhatsApp (n8n + Evolution API)
+
+O sistema **não fala com o WhatsApp diretamente**: ele envia cada aviso (destinatários com número e texto pronto) para um webhook do n8n, e o n8n repassa à Evolution API. Assim, trocar de provedor ou mudar o texto no fluxo não exige mexer no PHP.
+
+1. **No n8n**, importe `docs/n8n-avisos-saida.json` (Workflows → Import from file). No nó "Segredo confere?" coloque um segredo forte (ex.: 40 caracteres aleatórios); no nó "Evolution API: sendText" coloque a URL da sua Evolution, a instância e a `apikey`. Ative o workflow e copie a URL de produção do Webhook (`…/webhook/midia-avisos`).
+2. **No `.env`**: `N8N_WEBHOOK_URL=` (a URL copiada), `N8N_WEBHOOK_SECRET=` (o mesmo segredo), `NOTIFY_ENABLED=1`.
+3. Em *Administração → Integrações*, clique em **Enviar teste para mim** (cadastre seu WhatsApp antes em *Meus dados*). A tela mostra a fila, falhas e permite reenviar.
+4. **Respostas SIM/NÃO** (opcional): importe `docs/n8n-respostas-entrada.json`; no nó "Central de Mídia: /api/n8n/entrada" coloque a URL do seu sistema e um segundo segredo, que vai também em `N8N_INBOUND_SECRET` no `.env`. Na Evolution API, configure o webhook do evento `messages.upsert` apontando para a URL do Webhook desse workflow. Quem responder "SIM"/"NÃO" confirma ou recusa a próxima escala pendente e recebe a confirmação de volta.
+5. Cada pessoa pode desligar os avisos em *Meus dados*; o admin liga/desliga cada tipo em *Integrações*. O formato do payload de saída está descrito em `docs/n8n-avisos-saida.json` (campos `event`, `recipients[]`, `message`, `data`).
+
+## 10. Perfis de acesso
 
 | Perfil | Pode |
 |---|---|
@@ -107,7 +122,7 @@ URL: `https://admoema.com.br/midia/enviar`. Gere o QR Code para o telão/boletim
 
 Visibilidade das pastas: **restrito** (admin) · **equipe de mídia** · **equipe + ministério dono** · **todos os usuários logados**. Subpastas herdam; um arquivo pode sobrescrever a da pasta. Arquivo marcado "contém pessoa com restrição de imagem" fica sempre restrito.
 
-## 10. Onde ficam as coisas
+## 11. Onde ficam as coisas
 
 - Arquivos do repositório: `storage/files/AAAA/MM/` (nome aleatório; o nome original fica só no banco). Miniaturas em `storage/thumbs`, versão exibida sem EXIF/GPS em `storage/display`, quarentena em `storage/quarantine`. Nada disso é acessível por link direto: toda entrega passa por `/arquivos/{id}/download` com checagem de permissão e registro em `download_log`.
 - Fotos de perfil: `storage/photos/`. Fotos de referência de restrições: `storage/restrictions/`.
@@ -115,6 +130,6 @@ Visibilidade das pastas: **restrito** (admin) · **equipe de mídia** · **equip
 - Trilha de auditoria: *Administração → Auditoria*. Solicitações LGPD: *Administração → Privacidade*.
 - Espaço usado por pasta, tipo e pessoa: *Administração → Armazenamento*.
 
-## 11. Atualização de versão
+## 12. Atualização de versão
 
 Substitua os arquivos (menos `.env` e `storage/`) e importe novamente `sql/schema.sql`. Se o termo de privacidade mudar, aumente `TERMS_VERSION` no `.env`: todos serão convidados a aceitar a nova versão no próximo acesso.

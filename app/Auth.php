@@ -53,6 +53,8 @@ final class Auth
         'art.view_all'        => ['admin', 'coordenador', 'membro_midia', 'pastor'],
         'publications.view'   => ['admin', 'coordenador', 'membro_midia', 'pastor', 'lider_ministerio'],
         'publications.manage' => ['admin', 'coordenador', 'membro_midia'],
+        // Integrações
+        'integrations.manage' => ['admin'],
     ];
 
     private static ?array $user = null;

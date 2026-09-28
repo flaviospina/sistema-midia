@@ -211,4 +211,17 @@ $r->post('/comunicacao/{id}', [PublicationController::class, 'update'], ['perm' 
 $r->post('/comunicacao/{id}/publicar', [PublicationController::class, 'publish'], ['perm' => 'publications.manage']);
 $r->post('/comunicacao/{id}/cancelar', [PublicationController::class, 'cancel'], ['perm' => 'publications.manage']);
 
+// ---------------------------------------------------------------------
+// Integrações n8n / WhatsApp (Fase 5)
+// ---------------------------------------------------------------------
+$r->get('/integracoes', [IntegrationController::class, 'index'], ['perm' => 'integrations.manage']);
+$r->post('/integracoes/teste', [IntegrationController::class, 'test'], ['perm' => 'integrations.manage']);
+$r->post('/integracoes/processar', [IntegrationController::class, 'flush'], ['perm' => 'integrations.manage']);
+$r->post('/integracoes/eventos', [IntegrationController::class, 'saveEvents'], ['perm' => 'integrations.manage']);
+$r->post('/integracoes/{id}/reenviar', [IntegrationController::class, 'retry'], ['perm' => 'integrations.manage']);
+$r->post('/integracoes/{id}/cancelar', [IntegrationController::class, 'cancel'], ['perm' => 'integrations.manage']);
+// Chamados pelo n8n (autenticação por segredo no header, sem sessão nem CSRF)
+$r->get('/api/n8n/ping', [N8nController::class, 'ping'], ['auth' => false]);
+$r->post('/api/n8n/entrada', [N8nController::class, 'inbound'], ['auth' => false, 'csrf' => false]);
+
 return $r;

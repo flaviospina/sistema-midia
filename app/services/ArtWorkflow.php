@@ -56,6 +56,16 @@ final class ArtWorkflow
         if (!isset(self::actions($r)[$action])) {
             throw new InvalidArgumentException('Esta ação não está disponível para o pedido no estado atual.');
         }
+        $result = self::run($r, $action, $notes);
+        $after = ArtRequest::find((int) $r['id']);
+        if ($after && $after['status'] !== $r['status']) {
+            Notifier::artStatus($after, $notes);
+        }
+        return $result;
+    }
+
+    private static function run(array $r, string $action, string $notes): string
+    {
         $id = (int) $r['id'];
         $version = ArtRequest::currentVersion($id);
         $vid = $version ? (int) $version['id'] : null;

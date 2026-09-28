@@ -73,6 +73,7 @@ final class PublicationController
             if ($r && $r['status'] === 'aprovado') {
                 ArtRequest::set((int) $r['id'], ['status' => 'publicado', 'published_at' => date('Y-m-d H:i:s')]);
                 ArtWorkflow::log((int) $r['id'], 'Todas as publicações concluídas; pedido marcado como publicado.');
+                Notifier::artStatus(ArtRequest::find((int) $r['id']));
             }
         }
         Logger::audit('publicacao_publicada', 'publications', $id, null, ['link' => $link]);

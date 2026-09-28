@@ -68,6 +68,7 @@
               <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item" href="<?= url('/funcoes') ?>">Funções da equipe</a></li>
               <li><a class="dropdown-item" href="<?= url('/usuarios/pendentes') ?>">Cadastros pendentes</a></li>
+              <li><a class="dropdown-item" href="<?= url('/integracoes') ?>">Integrações (n8n / WhatsApp)</a></li>
               <li><a class="dropdown-item" href="<?= url('/privacidade') ?>">Privacidade (LGPD)</a></li>
               <li><a class="dropdown-item" href="<?= url('/auditoria') ?>">Auditoria</a></li>
             </ul>

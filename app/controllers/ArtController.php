@@ -53,6 +53,7 @@ final class ArtController
         $id = ArtRequest::create($d + ['requester_id' => Auth::id()]);
         ArtWorkflow::log($id, 'Pedido aberto por ' . Auth::user()['name'] . '.');
         Logger::audit('arte_pedido_criado', 'art_requests', $id, null, $d);
+        Notifier::artStatus(ArtRequest::find($id));
         flash('success', 'Pedido enviado à equipe de mídia.' . ($d['is_urgent'] ? ' Atenção: o prazo é menor que ' . ART_MIN_DAYS . ' dias; a equipe fará o possível.' : ''));
         redirect('/artes/' . $id);
     }
@@ -129,6 +130,9 @@ final class ArtController
         }
         ArtRequest::set($id, $fields);
         ArtWorkflow::log($id, $u ? 'Designer definido: ' . $u['name'] . '.' : 'Designer removido.');
+        if ($u) {
+            Notifier::notify('arte.status', [(int) $u['id']], "🎨 Você é o(a) designer de *{$r['title']}* (publicação em " . format_date($r['publish_on']) . ").\nVer: " . BASE_URL . url('/artes/' . $id), ['request_id' => $id, 'status' => 'designer']);
+        }
         flash('success', $u ? $u['name'] . ' é o(a) designer deste pedido.' : 'Designer removido.');
         redirect('/artes/' . $id);
     }

@@ -87,6 +87,7 @@ final class ScheduleController
         }
         $aid = Assignment::create($id, $fid, $uid);
         Logger::audit('escalado', 'assignments', $aid, null, ['event_id' => $id, 'function_id' => $fid, 'user_id' => $uid]);
+        Notifier::assigned(Assignment::find($aid));
         flash('success', $user['name'] . ' escalado(a). Aguardando confirmação.');
         redirect('/eventos/' . $id . '/escala');
     }
@@ -114,7 +115,8 @@ final class ScheduleController
             }
             foreach ($people as $p) {
                 if (!Assignment::exists($id, $fid, (int) $p['id'])) {
-                    Assignment::create($id, $fid, (int) $p['id']);
+                    $aid = Assignment::create($id, $fid, (int) $p['id']);
+                    Notifier::assigned(Assignment::find($aid));
                     $n++;
                 }
             }
@@ -143,6 +145,7 @@ final class ScheduleController
             SwapRequest::setStatus($id, 'aprovada', Auth::id());
         });
         Logger::audit('troca_aprovada', 'swap_requests', $id, null, ['de' => $s['from_user_id'], 'para' => $s['to_user_id'], 'assignment' => $s['assignment_id']]);
+        Notifier::swapDecided($s, true);
         flash('success', 'Troca aprovada: ' . $s['to_name'] . ' assume ' . $s['function_name'] . ' em ' . $s['event_title'] . '.');
         redirect_back('/trocas');
     }
@@ -155,6 +158,7 @@ final class ScheduleController
         }
         SwapRequest::setStatus($id, 'rejeitada', Auth::id());
         Logger::audit('troca_rejeitada', 'swap_requests', $id);
+        Notifier::swapDecided($s, false);
         flash('success', 'Troca rejeitada. A escala original permanece.');
         redirect_back('/trocas');
     }

@@ -30,6 +30,7 @@
             <label class="form-label" for="whatsapp">WhatsApp</label>
             <input type="tel" class="form-control<?= invalid('whatsapp') ?>" id="whatsapp" name="whatsapp" value="<?= e(old('whatsapp', $u['whatsapp'] ? format_phone($u['whatsapp']) : '')) ?>" data-mask="phone">
             <?= field_error('whatsapp') ?>
+            <div class="form-check form-switch mt-2"><input class="form-check-input" type="checkbox" role="switch" id="notify_whatsapp" name="notify_whatsapp" value="1"<?= checked($notifyWa) ?>><label class="form-check-label small" for="notify_whatsapp">Receber avisos por WhatsApp (escala, lembretes, artes)</label></div>
           </div>
         </div>
         <dl class="row small mb-0 text-muted">

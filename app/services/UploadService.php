@@ -281,6 +281,9 @@ final class UploadService
         ], $session['user_id'] !== null ? (int) $session['user_id'] : null);
 
         $file = MediaFile::find($fileId);
+        if ($status === 'quarentena') {
+            Notifier::quarantine($file);
+        }
         return [
             'id' => $fileId, 'name' => $file['original_name'], 'status' => $status, 'status_label' => MediaFile::STATUSES[$status],
             'url' => $isGuest ? null : url('/arquivos/' . $fileId), 'thumb' => $thumbRef && !$isGuest ? url('/arquivos/' . $fileId . '/miniatura') : null,

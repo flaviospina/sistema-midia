@@ -57,6 +57,9 @@ final class MyScheduleController
         }
         Assignment::respond($id, $status, $note);
         Logger::audit($status === 'confirmado' ? 'escala_confirmada' : 'escala_recusada', 'assignments', $id, ['status' => $a['status']], ['status' => $status, 'motivo' => $note]);
+        if ($status === 'recusado') {
+            Notifier::declined($a, $note);
+        }
         flash('success', $status === 'confirmado' ? 'Presença confirmada em ' . $a['event_title'] . '.' : 'Recusa registrada. O coordenador será avisado.');
         redirect('/minha-escala');
     }
@@ -80,6 +83,7 @@ final class MyScheduleController
         }
         $sid = SwapRequest::create($id, (int) Auth::id(), $to, mb_substr(input('reason'), 0, 300) ?: null);
         Logger::audit('troca_solicitada', 'swap_requests', $sid, null, ['assignment' => $id, 'para' => $to]);
+        Notifier::swapRequested(SwapRequest::find($sid));
         flash('success', 'Pedido enviado a ' . $target['name'] . '. Depois que aceitar, o coordenador aprova.');
         redirect('/minha-escala');
     }
@@ -92,6 +96,7 @@ final class MyScheduleController
         }
         SwapRequest::setStatus($id, 'aguardando_coordenador');
         Logger::audit('troca_aceita_membro', 'swap_requests', $id);
+        Notifier::swapAccepted($s);
         flash('success', 'Você aceitou a troca. Agora falta a aprovação do coordenador.');
         redirect('/minha-escala');
     }

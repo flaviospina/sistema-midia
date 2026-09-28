@@ -179,5 +179,7 @@ Frequência, recusas, sobrecarga, pedidos atrasados, ministérios que mais deman
 4. ~~Quais tipos de arte exigem aprovação pastoral~~ **Decidido (Fase 4):** por formato, configurável em `ART_PASTORAL_FORMATS` no `.env` (padrão `impresso,telao`); o admin pode exigir/dispensar caso a caso ao editar o pedido.
 5. ~~Se `membro_igreja` terá login~~ **Decidido (Fase 1):** tem login; autocadastro em `/cadastro` com aprovação pela mídia.
 
+6. **Decidido (Fase 5):** avisos por WhatsApp via n8n → Evolution API, com texto pronto gerado pelo sistema; eventos ligáveis na tela *Integrações*; cada pessoa pode desligar em *Meus dados*; respostas SIM/NÃO confirmam/recusam a próxima escala pendente. Google Drive não implementado (decisão 2).
+
 ## 9. Checklist de segurança (toda fase)
 PDO com prepared statements · `htmlspecialchars()` em toda saída · `password_hash()` · `session_regenerate_id(true)` no login · CSRF em todo POST · `.env`, `app/` e `storage/` inacessíveis pela web · uploads renomeados e validados · logs de ação · exclusão/anonimização de dados pessoais a pedido do titular.

@@ -47,6 +47,9 @@ $report['lixeira_apagados'] = count($trashed);
 $report['eventos_gerados'] = Recurrence::generate();
 $report['eventos_concluidos'] = Event::closePast();
 
+// Avisos antigos já enviados
+$report['avisos_removidos'] = Notification::purge(60);
+
 // Tokens de redefinição de senha vencidos
 $report['resets_removidos'] = PasswordReset::purge();
 

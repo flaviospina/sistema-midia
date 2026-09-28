@@ -659,6 +659,58 @@ CREATE TABLE IF NOT EXISTS password_resets (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
+-- Integrações n8n / WhatsApp (Fase 5)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS settings (
+    setting_key VARCHAR(60)  NOT NULL PRIMARY KEY,
+    value       TEXT         NULL,
+    updated_by  INT UNSIGNED NULL,
+    updated_at  DATETIME     NULL ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS user_preferences (
+    user_id    INT UNSIGNED NOT NULL,
+    pref_key   VARCHAR(40)  NOT NULL,
+    value      VARCHAR(100) NULL,
+    updated_at DATETIME     NULL ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, pref_key),
+    CONSTRAINT fk_user_preferences_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Fila de notificações enviadas ao n8n (que repassa ao WhatsApp via Evolution API)
+CREATE TABLE IF NOT EXISTS notifications (
+    id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    event           VARCHAR(50)  NOT NULL,              -- ex.: escala.escalado, arte.status
+    dedupe_key      VARCHAR(80)  NULL,                  -- agrupa avisos repetidos enquanto pendentes
+    recipients      TEXT         NOT NULL,              -- JSON: [{user_id, name, whatsapp}]
+    message         TEXT         NOT NULL,              -- texto pronto em pt-BR
+    data            TEXT         NULL,                  -- JSON com detalhes
+    status          ENUM('pendente','enviado','falhou','cancelado') NOT NULL DEFAULT 'pendente',
+    attempts        TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    next_attempt_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_error      VARCHAR(500) NULL,
+    response_code   SMALLINT     NULL,
+    sent_at         DATETIME     NULL,
+    created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_notifications_status (status, next_attempt_at),
+    KEY idx_notifications_dedupe (dedupe_key, status),
+    KEY idx_notifications_event (event, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Mensagens recebidas do WhatsApp (via n8n) e o que o sistema fez com elas
+CREATE TABLE IF NOT EXISTS inbound_messages (
+    id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    phone      VARCHAR(20)  NOT NULL,
+    user_id    INT UNSIGNED NULL,
+    text       VARCHAR(500) NOT NULL,
+    action     VARCHAR(50)  NULL,
+    reply      VARCHAR(500) NULL,
+    created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_inbound_phone (phone, created_at),
+    CONSTRAINT fk_inbound_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------
 -- Dados iniciais
 -- ---------------------------------------------------------------------
 INSERT IGNORE INTO media_functions (name, slug, sort_order) VALUES

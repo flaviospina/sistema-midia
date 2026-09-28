@@ -99,6 +99,7 @@ final class EventController
         $e = Event::find($id) ?? abort(404);
         Event::setStatus($id, 'cancelado');
         Logger::audit('evento_cancelado', 'events', $id, ['status' => $e['status']], ['status' => 'cancelado', 'motivo' => input('reason')]);
+        Notifier::eventCancelled($e);
         flash('success', 'Evento cancelado. As pessoas escaladas verão o cancelamento em "Minha escala".');
         redirect('/eventos/' . $id);
     }
