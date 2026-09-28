@@ -2,6 +2,9 @@
 (function () {
   'use strict';
 
+  // Barras de progresso estáticas (largura vem de data-width; CSP não permite style inline)
+  document.querySelectorAll('[data-width]').forEach(function (el) { el.style.width = el.dataset.width + '%'; });
+
   // Confirmação em formulários com data-confirm
   document.addEventListener('submit', function (ev) {
     var form = ev.target;

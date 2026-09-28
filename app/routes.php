@@ -67,4 +67,69 @@ $r->post('/meus-dados/revogar', [ProfileController::class, 'revoke']);
 $r->get('/privacidade', [PrivacyController::class, 'index'], ['perm' => 'privacy.manage']);
 $r->post('/privacidade/{id}/resolver', [PrivacyController::class, 'resolve'], ['perm' => 'privacy.manage']);
 
+// ---------------------------------------------------------------------
+// Repositório de arquivos (Fase 2)
+// ---------------------------------------------------------------------
+$r->get('/arquivos', [FileController::class, 'index'], ['perm' => 'files.browse']);
+$r->get('/arquivos/buscar', [FileController::class, 'search'], ['perm' => 'files.browse']);
+$r->get('/arquivos/enviar', [FileController::class, 'uploadForm'], ['perm' => 'files.upload']);
+$r->get('/arquivos/lixeira', [FileController::class, 'trash'], ['perm' => 'files.moderate']);
+$r->post('/arquivos/lixeira/esvaziar', [FileController::class, 'emptyTrash'], ['perm' => 'files.moderate']);
+$r->post('/arquivos/zip', [FileController::class, 'zipSelection'], ['perm' => 'files.browse']);
+$r->get('/arquivos/{id}', [FileController::class, 'show'], ['perm' => 'files.browse']);
+$r->get('/arquivos/{id}/editar', [FileController::class, 'edit'], ['perm' => 'files.browse']);
+$r->post('/arquivos/{id}', [FileController::class, 'update'], ['perm' => 'files.browse']);
+$r->post('/arquivos/{id}/lixeira', [FileController::class, 'trashFile'], ['perm' => 'files.browse']);
+$r->post('/arquivos/{id}/restaurar', [FileController::class, 'restore'], ['perm' => 'files.moderate']);
+$r->get('/arquivos/{id}/download', [DownloadController::class, 'download'], ['perm' => 'files.browse']);
+$r->get('/arquivos/{id}/original', [DownloadController::class, 'original'], ['perm' => 'files.original']);
+$r->get('/arquivos/{id}/ver', [DownloadController::class, 'view'], ['perm' => 'files.browse']);
+$r->get('/arquivos/{id}/miniatura', [DownloadController::class, 'thumb'], ['perm' => 'files.browse']);
+
+$r->get('/pastas/nova', [FolderController::class, 'create'], ['perm' => 'folders.manage']);
+$r->post('/pastas', [FolderController::class, 'store'], ['perm' => 'folders.manage']);
+$r->get('/pastas/{id}', [FileController::class, 'folder'], ['perm' => 'files.browse']);
+$r->get('/pastas/{id}/editar', [FolderController::class, 'edit'], ['perm' => 'folders.manage']);
+$r->post('/pastas/{id}', [FolderController::class, 'update'], ['perm' => 'folders.manage']);
+$r->post('/pastas/{id}/excluir', [FolderController::class, 'delete'], ['perm' => 'folders.manage']);
+$r->get('/pastas/{id}/zip', [DownloadController::class, 'zipFolder'], ['perm' => 'files.browse']);
+
+// Upload em pedaços (usuário logado OU convidado com sessão de /enviar — verificado no controller)
+$r->post('/api/upload/iniciar', [UploadController::class, 'start'], ['auth' => false]);
+$r->post('/api/upload/pedaco', [UploadController::class, 'chunk'], ['auth' => false]);
+$r->get('/api/upload/{token}/status', [UploadController::class, 'status'], ['auth' => false]);
+$r->post('/api/upload/concluir', [UploadController::class, 'finish'], ['auth' => false]);
+$r->post('/api/upload/cancelar', [UploadController::class, 'cancel'], ['auth' => false]);
+
+// Moderação
+$r->get('/moderacao', [ModerationController::class, 'index'], ['perm' => 'files.moderate']);
+$r->post('/moderacao/{id}/aprovar', [ModerationController::class, 'approve'], ['perm' => 'files.moderate']);
+$r->post('/moderacao/{id}/rejeitar', [ModerationController::class, 'reject'], ['perm' => 'files.moderate']);
+
+// Compartilhamento
+$r->get('/compartilhamentos', [ShareController::class, 'index'], ['perm' => 'files.share']);
+$r->post('/compartilhamentos', [ShareController::class, 'create'], ['perm' => 'files.share']);
+$r->post('/compartilhamentos/{id}/desativar', [ShareController::class, 'deactivate'], ['perm' => 'files.share']);
+$r->get('/compartilhar/{token}', [ShareController::class, 'publicPage'], ['auth' => false]);
+$r->get('/compartilhar/{token}/zip', [ShareController::class, 'publicZip'], ['auth' => false]);
+$r->get('/compartilhar/{token}/arquivo/{id}', [ShareController::class, 'publicFile'], ['auth' => false]);
+$r->get('/compartilhar/{token}/miniatura/{id}', [ShareController::class, 'publicThumb'], ['auth' => false]);
+
+// Direito de imagem
+$r->get('/restricoes', [RestrictionController::class, 'index'], ['perm' => 'restrictions.view']);
+$r->get('/restricoes/nova', [RestrictionController::class, 'create'], ['perm' => 'restrictions.manage']);
+$r->post('/restricoes', [RestrictionController::class, 'store'], ['perm' => 'restrictions.manage']);
+$r->get('/restricoes/{id}/editar', [RestrictionController::class, 'edit'], ['perm' => 'restrictions.manage']);
+$r->post('/restricoes/{id}', [RestrictionController::class, 'update'], ['perm' => 'restrictions.manage']);
+$r->get('/restricoes/{id}/foto', [RestrictionController::class, 'photo'], ['perm' => 'restrictions.view']);
+
+// Armazenamento
+$r->get('/armazenamento', [StorageController::class, 'index'], ['perm' => 'storage.view']);
+
+// Página pública de envio (convidados)
+$r->get('/enviar', [GuestController::class, 'form'], ['auth' => false]);
+$r->post('/enviar', [GuestController::class, 'start'], ['auth' => false]);
+$r->get('/enviar/arquivos', [GuestController::class, 'files'], ['auth' => false]);
+$r->get('/enviar/concluido', [GuestController::class, 'done'], ['auth' => false]);
+
 return $r;

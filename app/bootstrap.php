@@ -17,7 +17,7 @@ require APP_ROOT . '/app/Validator.php';
 require APP_ROOT . '/app/Router.php';
 
 spl_autoload_register(static function (string $class): void {
-    foreach (['controllers', 'models', 'services'] as $dir) {
+    foreach (['controllers', 'models', 'services', 'storage'] as $dir) {
         $file = APP_ROOT . "/app/{$dir}/{$class}.php";
         if (is_file($file)) {
             require $file;
@@ -63,10 +63,11 @@ set_exception_handler(static function (Throwable $e): void {
 });
 
 if (PHP_SAPI !== 'cli') {
+    $captcha = HCAPTCHA_ENABLED ? ' https://js.hcaptcha.com https://*.hcaptcha.com' : '';
     header('X-Content-Type-Options: nosniff');
     header('X-Frame-Options: DENY');
     header('Referrer-Policy: same-origin');
     header('Permissions-Policy: geolocation=(), microphone=()');
-    header("Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'");
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net{$captcha}; style-src 'self' https://cdn.jsdelivr.net{$captcha}; font-src 'self' https://cdn.jsdelivr.net; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'{$captcha}; frame-src 'self'{$captcha}; worker-src 'self' blob:; frame-ancestors 'none'; form-action 'self'; base-uri 'self'");
     Auth::startSession();
 }

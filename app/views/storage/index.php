@@ -1,0 +1,18 @@
+<h1 class="h4 mb-3">Armazenamento</h1>
+<?php if ($alert): ?><div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> O espaço usado (<?= e(format_bytes($diskTotal)) ?>) passou do limite de alerta (<?= STORAGE_ALERT_GB ?> GB definido no .env). Esvazie a lixeira, remova duplicados ou amplie o plano.</div><?php endif; ?>
+<div class="row g-3 mb-3">
+  <div class="col-6 col-md-3"><div class="card stat-card h-100"><div class="card-body"><div class="text-muted small">Arquivos ativos</div><div class="stat-value"><?= (int) $totals['qty'] ?></div><div class="small text-muted"><?= e(format_bytes((int) $totals['bytes'])) ?> no banco</div></div></div></div>
+  <div class="col-6 col-md-3"><div class="card stat-card h-100"><div class="card-body"><div class="text-muted small">Em disco (tudo)</div><div class="stat-value"><?= e(format_bytes($diskTotal)) ?></div>
+    <?php if ($limit > 0): ?><div class="progress usage-bar mt-1"><div class="progress-bar<?= $alert ? ' bg-danger' : '' ?>" data-width="<?= (int) min(100, round($diskTotal / $limit * 100)) ?>"></div></div><div class="small text-muted">limite de alerta <?= STORAGE_ALERT_GB ?> GB</div><?php endif; ?></div></div></div>
+  <div class="col-6 col-md-3"><a class="card stat-card h-100 text-decoration-none" href="<?= url('/moderacao') ?>"><div class="card-body"><div class="text-muted small">Na quarentena</div><div class="stat-value <?= $quarantine ? 'text-warning' : '' ?>"><?= $quarantine ?></div><div class="small text-muted"><?= $pending ?> upload(s) em andamento</div></div></a></div>
+  <div class="col-6 col-md-3"><a class="card stat-card h-100 text-decoration-none" href="<?= url('/arquivos/lixeira') ?>"><div class="card-body"><div class="text-muted small">Na lixeira</div><div class="stat-value"><?= e(format_bytes($trash)) ?></div><div class="small text-muted">recuperável</div></div></a></div>
+</div>
+<div class="row g-3">
+  <div class="col-lg-4"><div class="card h-100"><div class="card-header bg-white fw-semibold">Por pasta (1º nível)</div>
+    <table class="table table-sm mb-0 small"><tbody><?php foreach ($byRoot as $name => $u): ?><tr><td><?= e($name) ?></td><td class="text-end text-nowrap"><?= (int) $u['qty'] ?> · <?= e(format_bytes($u['bytes'])) ?></td></tr><?php endforeach; ?><?php if (!$byRoot): ?><tr><td class="text-muted">Sem arquivos.</td></tr><?php endif; ?></tbody></table></div></div>
+  <div class="col-lg-4"><div class="card h-100"><div class="card-header bg-white fw-semibold">Por tipo</div>
+    <table class="table table-sm mb-0 small"><tbody><?php foreach ($byCategory as $c): ?><tr><td><?= e(FileTypes::CATEGORIES[$c['category']] ?? $c['category']) ?></td><td class="text-end text-nowrap"><?= (int) $c['qty'] ?> · <?= e(format_bytes((int) $c['bytes'])) ?></td></tr><?php endforeach; ?></tbody></table>
+    <div class="card-footer bg-white small text-muted">Disco: originais <?= e(format_bytes($disk['files'])) ?> · quarentena <?= e(format_bytes($disk['quarantine'])) ?> · miniaturas <?= e(format_bytes($disk['thumbs'])) ?> · exibição <?= e(format_bytes($disk['display'])) ?> · temporários <?= e(format_bytes($disk['tmp_chunks'])) ?></div></div></div>
+  <div class="col-lg-4"><div class="card h-100"><div class="card-header bg-white fw-semibold">Por pessoa (cota)</div>
+    <table class="table table-sm mb-0 small"><tbody><?php foreach ($byUser as $u): $q = Access::quotaBytes($u['role']); ?><tr><td><a href="<?= url('/usuarios/' . (int) $u['id']) ?>"><?= e($u['name']) ?></a></td><td class="text-end text-nowrap"><?= e(format_bytes((int) $u['bytes'])) ?><?= $q > 0 ? ' <span class="text-muted">/ ' . e(format_bytes($q)) . '</span>' : '' ?></td></tr><?php endforeach; ?></tbody></table></div></div>
+</div>

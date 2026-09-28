@@ -18,15 +18,25 @@ final class Auth
 
     /** Matriz de permissões. Checada no servidor em toda rota protegida. */
     private const PERMISSIONS = [
-        'users.view'       => ['admin', 'coordenador', 'pastor'],
-        'users.manage'     => ['admin'],
-        'users.functions'  => ['admin', 'coordenador'],
-        'users.approve'    => ['admin', 'coordenador'],
-        'ministries.view'  => ['admin', 'coordenador', 'pastor', 'membro_midia'],
-        'ministries.manage'=> ['admin'],
-        'functions.manage' => ['admin'],
-        'audit.view'       => ['admin'],
-        'privacy.manage'   => ['admin'],
+        'users.view'          => ['admin', 'coordenador', 'pastor'],
+        'users.manage'        => ['admin'],
+        'users.functions'     => ['admin', 'coordenador'],
+        'users.approve'       => ['admin', 'coordenador'],
+        'ministries.view'     => ['admin', 'coordenador', 'pastor', 'membro_midia'],
+        'ministries.manage'   => ['admin'],
+        'functions.manage'    => ['admin'],
+        'audit.view'          => ['admin'],
+        'privacy.manage'      => ['admin'],
+        // Repositório
+        'files.browse'        => ['admin', 'coordenador', 'membro_midia', 'lider_ministerio', 'pastor', 'membro_igreja'],
+        'files.upload'        => ['admin', 'coordenador', 'membro_midia', 'lider_ministerio', 'pastor', 'membro_igreja'],
+        'files.moderate'      => ['admin', 'coordenador'],
+        'files.share'         => ['admin', 'coordenador', 'membro_midia'],
+        'files.original'      => ['admin'],
+        'folders.manage'      => ['admin', 'coordenador'],
+        'storage.view'        => ['admin', 'coordenador'],
+        'restrictions.view'   => ['admin', 'coordenador', 'membro_midia'],
+        'restrictions.manage' => ['admin', 'coordenador'],
     ];
 
     private static ?array $user = null;
@@ -163,5 +173,16 @@ final class Auth
     public static function roleLabel(?string $role): string
     {
         return self::ROLES[$role] ?? '—';
+    }
+
+    /** IDs dos ministérios do usuário logado (cache por requisição). */
+    public static function ministryIds(): array
+    {
+        static $ids = null;
+        if ($ids === null) {
+            $id = self::id();
+            $ids = $id ? array_map('intval', array_column(User::ministries($id), 'id')) : [];
+        }
+        return $ids;
     }
 }

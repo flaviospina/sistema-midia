@@ -24,6 +24,12 @@
     <div class="collapse navbar-collapse" id="menu">
       <ul class="navbar-nav me-auto">
         <li class="nav-item"><a class="nav-link" href="<?= url('/') ?>"><i class="bi bi-house"></i> Início</a></li>
+        <?php if (Auth::can('files.browse')): ?>
+          <li class="nav-item"><a class="nav-link" href="<?= url('/arquivos') ?>"><i class="bi bi-hdd-stack"></i> Arquivos</a></li>
+        <?php endif; ?>
+        <?php if (Auth::can('files.moderate')): $qn = MediaFile::countQuarantine(); ?>
+          <li class="nav-item"><a class="nav-link" href="<?= url('/moderacao') ?>"><i class="bi bi-shield-check"></i> Quarentena<?= $qn ? ' <span class="badge text-bg-warning">' . $qn . '</span>' : '' ?></a></li>
+        <?php endif; ?>
         <?php if (Auth::can('users.view')): ?>
           <li class="nav-item"><a class="nav-link" href="<?= url('/usuarios') ?>"><i class="bi bi-people"></i> Pessoas</a></li>
         <?php endif; ?>
@@ -34,6 +40,11 @@
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-gear"></i> Administração</a>
             <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="<?= url('/restricoes') ?>">Restrições de imagem</a></li>
+              <li><a class="dropdown-item" href="<?= url('/compartilhamentos') ?>">Links de compartilhamento</a></li>
+              <li><a class="dropdown-item" href="<?= url('/armazenamento') ?>">Armazenamento</a></li>
+              <li><a class="dropdown-item" href="<?= url('/arquivos/lixeira') ?>">Lixeira</a></li>
+              <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item" href="<?= url('/funcoes') ?>">Funções da equipe</a></li>
               <li><a class="dropdown-item" href="<?= url('/usuarios/pendentes') ?>">Cadastros pendentes</a></li>
               <li><a class="dropdown-item" href="<?= url('/privacidade') ?>">Privacidade (LGPD)</a></li>
@@ -41,7 +52,18 @@
             </ul>
           </li>
         <?php elseif (Auth::can('users.approve')): ?>
-          <li class="nav-item"><a class="nav-link" href="<?= url('/usuarios/pendentes') ?>"><i class="bi bi-person-check"></i> Pendentes</a></li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-gear"></i> Coordenação</a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="<?= url('/usuarios/pendentes') ?>">Cadastros pendentes</a></li>
+              <li><a class="dropdown-item" href="<?= url('/restricoes') ?>">Restrições de imagem</a></li>
+              <li><a class="dropdown-item" href="<?= url('/compartilhamentos') ?>">Links de compartilhamento</a></li>
+              <li><a class="dropdown-item" href="<?= url('/armazenamento') ?>">Armazenamento</a></li>
+              <li><a class="dropdown-item" href="<?= url('/arquivos/lixeira') ?>">Lixeira</a></li>
+            </ul>
+          </li>
+        <?php elseif (Auth::can('restrictions.view')): ?>
+          <li class="nav-item"><a class="nav-link" href="<?= url('/restricoes') ?>"><i class="bi bi-eye-slash"></i> Restrições</a></li>
         <?php endif; ?>
       </ul>
       <ul class="navbar-nav">
@@ -80,5 +102,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="<?= asset('js/app.js') ?>"></script>
+<script src="<?= asset('js/files.js') ?>"></script>
+<script src="<?= asset('js/uploader.js') ?>"></script>
 </body>
 </html>

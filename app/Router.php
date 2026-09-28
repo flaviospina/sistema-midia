@@ -7,11 +7,13 @@ final class Router
     private array $routes = [];
 
     /**
+     * Padrões: {id} (numérico) ou {token} (letras, números, "-" e "_").
      * Opções:
      *  - auth  (bool, padrão true): exige login
      *  - perm  (string|null): permissão exigida (Auth::can)
      *  - gate  (bool, padrão true): aplica troca de senha obrigatória e aceite do termo
      *  - guest (bool): só para quem NÃO está logado (ex.: login)
+     *  - csrf  (bool, padrão true): valida token CSRF em POST
      */
     public function get(string $pattern, array $handler, array $options = []): self
     {
@@ -25,8 +27,14 @@ final class Router
 
     private function add(string $method, string $pattern, array $handler, array $options): self
     {
-        $regex = '#^' . preg_replace('#\{(\w+)\}#', '(?P<$1>[0-9]+)', rtrim($pattern, '/') ?: '/') . '$#';
-        $this->routes[] = compact('method', 'regex', 'handler', 'options');
+        $regex = preg_replace_callback(
+            '#\{(\w+)\}#',
+            static fn(array $m): string => $m[1] === 'token'
+                ? '(?P<token>[A-Za-z0-9_-]{8,128})'
+                : '(?P<' . $m[1] . '>[0-9]+)',
+            rtrim($pattern, '/') ?: '/'
+        );
+        $this->routes[] = ['method' => $method, 'regex' => '#^' . $regex . '$#', 'handler' => $handler, 'options' => $options];
         return $this;
     }
 
@@ -44,11 +52,16 @@ final class Router
             if ($route['method'] !== $method) {
                 continue;
             }
-            $params = array_map('intval', array_filter($m, 'is_string', ARRAY_FILTER_USE_KEY));
+            $params = [];
+            foreach ($m as $key => $value) {
+                if (is_string($key)) {
+                    $params[] = ctype_digit($value) && $key !== 'token' ? (int) $value : $value;
+                }
+            }
             $this->runMiddleware($route['options'], $method, $path);
 
             [$class, $action] = $route['handler'];
-            (new $class())->$action(...array_values($params));
+            (new $class())->$action(...$params);
             exit;
         }
 
@@ -63,13 +76,13 @@ final class Router
             $path = substr($path, strlen(BASE_PATH));
         }
         $path = preg_replace('#^/(public/)?index\.php#', '', $path) ?? $path;
-        $path = '/' . trim($path, '/');
-        return $path;
+        $path = preg_replace('#^/enviar\.php$#', '/enviar', $path) ?? $path;
+        return '/' . trim($path, '/');
     }
 
     private function runMiddleware(array $options, string $method, string $path): void
     {
-        if ($method === 'POST' && !Csrf::verify()) {
+        if ($method === 'POST' && ($options['csrf'] ?? true) && !Csrf::verify()) {
             Logger::info('Token CSRF inválido', ['path' => $path]);
             if (wants_json()) {
                 json_response(false, null, 'Sua sessão expirou. Recarregue a página.', 419);
@@ -100,9 +113,15 @@ final class Router
 
         if (($options['gate'] ?? true) === true) {
             if ((int) $user['must_change_password'] === 1) {
+                if (wants_json()) {
+                    json_response(false, null, 'Defina sua nova senha antes de continuar.', 403);
+                }
                 redirect('/trocar-senha');
             }
             if (!Consent::hasActive((int) $user['id'], 'cadastro', TERMS_VERSION)) {
+                if (wants_json()) {
+                    json_response(false, null, 'Aceite o termo de uso antes de continuar.', 403);
+                }
                 redirect('/termo');
             }
         }

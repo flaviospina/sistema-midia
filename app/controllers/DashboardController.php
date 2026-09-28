@@ -30,6 +30,12 @@ final class DashboardController
                ORDER BY f.sort_order"
             );
         }
+        if (Auth::can('files.moderate')) {
+            $data['quarantine'] = MediaFile::countQuarantine();
+        }
+        if (Auth::can('files.browse')) {
+            $data['recentFiles'] = MediaFile::search(['order' => 'recentes'], 1, 8)['itens'];
+        }
         if (Auth::can('audit.view')) {
             $data['recentAudit'] = AuditLog::recent(8);
         }

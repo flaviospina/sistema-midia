@@ -263,3 +263,45 @@ function temp_password(int $length = 12): string
     }
     return $out;
 }
+
+/** 1536000 → "1,5 MB". */
+function format_bytes(int|float $bytes, int $decimals = 1): string
+{
+    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    $i = 0;
+    $n = (float) $bytes;
+    while ($n >= 1024 && $i < count($units) - 1) {
+        $n /= 1024;
+        $i++;
+    }
+    return number_format($n, $i === 0 ? 0 : $decimals, ',', '.') . ' ' . $units[$i];
+}
+
+/** 125 → "2:05". */
+function format_duration(?int $seconds): string
+{
+    if ($seconds === null) {
+        return '';
+    }
+    $h = intdiv($seconds, 3600);
+    $m = intdiv($seconds % 3600, 60);
+    $s = $seconds % 60;
+    return $h > 0 ? sprintf('%d:%02d:%02d', $h, $m, $s) : sprintf('%d:%02d', $m, $s);
+}
+
+function truncate(string $text, int $max = 60): string
+{
+    return mb_strlen($text) > $max ? mb_substr($text, 0, $max - 1) . '…' : $text;
+}
+
+/** Lê o corpo JSON de uma requisição (APIs internas). */
+function json_input(): array
+{
+    static $data = null;
+    if ($data === null) {
+        $raw = file_get_contents('php://input') ?: '';
+        $decoded = json_decode($raw, true);
+        $data = is_array($decoded) ? $decoded : [];
+    }
+    return $data;
+}

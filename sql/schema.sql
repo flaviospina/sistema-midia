@@ -171,6 +171,201 @@ CREATE TABLE IF NOT EXISTS rate_limit_hits (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
+-- Repositório de arquivos (Fase 2)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS folders (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    parent_id   INT UNSIGNED NULL,
+    name        VARCHAR(120) NOT NULL,
+    description VARCHAR(500) NULL,
+    visibility  ENUM('restrito','midia','ministerio','membros') NULL,  -- NULL = herda da pasta pai
+    ministry_id INT UNSIGNED NULL,                                     -- dono, para visibilidade 'ministerio'
+    is_system   TINYINT(1)   NOT NULL DEFAULT 0,                       -- pastas criadas pelo sistema (não apagar)
+    sort_order  SMALLINT     NOT NULL DEFAULT 0,
+    created_by  INT UNSIGNED NULL,
+    created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  DATETIME     NULL ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_folders_parent (parent_id, sort_order, name),
+    KEY idx_folders_ministry (ministry_id),
+    CONSTRAINT fk_folders_parent FOREIGN KEY (parent_id) REFERENCES folders (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_folders_ministry FOREIGN KEY (ministry_id) REFERENCES ministries (id) ON DELETE SET NULL,
+    CONSTRAINT fk_folders_creator FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS guest_uploads (
+    id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    guest_name     VARCHAR(150) NOT NULL,
+    whatsapp       VARCHAR(20)  NULL,
+    ministry_id    INT UNSIGNED NULL,
+    ministry_name  VARCHAR(120) NULL,
+    event_name     VARCHAR(150) NULL,
+    description    TEXT         NULL,
+    terms_version  VARCHAR(20)  NOT NULL,
+    consent_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ip             VARCHAR(45)  NOT NULL,
+    user_agent     VARCHAR(255) NULL,
+    token          CHAR(32)     NOT NULL,
+    created_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_guest_uploads_token (token),
+    KEY idx_guest_uploads_ip (ip, created_at),
+    CONSTRAINT fk_guest_uploads_ministry FOREIGN KEY (ministry_id) REFERENCES ministries (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS files (
+    id               INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    folder_id        INT UNSIGNED NULL,
+    driver           VARCHAR(20)  NOT NULL DEFAULT 'local',
+    storage_ref      VARCHAR(255) NOT NULL,           -- caminho relativo no driver (nome aleatório)
+    display_ref      VARCHAR(255) NULL,               -- versão exibida sem EXIF (imagens JPEG)
+    thumb_ref        VARCHAR(255) NULL,
+    original_name    VARCHAR(255) NOT NULL,
+    extension        VARCHAR(10)  NOT NULL,
+    mime             VARCHAR(100) NOT NULL,
+    size_bytes       BIGINT UNSIGNED NOT NULL,
+    sha256           CHAR(64)     NOT NULL,
+    width            INT UNSIGNED NULL,
+    height           INT UNSIGNED NULL,
+    duration_seconds INT UNSIGNED NULL,
+    category         ENUM('foto','video','audio','arte_final','documento','identidade_visual') NOT NULL DEFAULT 'documento',
+    title            VARCHAR(200) NULL,
+    description      TEXT         NULL,
+    visibility       ENUM('restrito','midia','ministerio','membros') NULL,  -- NULL = herda da pasta
+    has_restriction  TINYINT(1)   NOT NULL DEFAULT 0,  -- contém pessoa com restrição de imagem => restrito
+    status           ENUM('quarentena','aprovado','rejeitado','lixeira') NOT NULL DEFAULT 'aprovado',
+    event_id         INT UNSIGNED NULL,                -- FK criada na Fase 3
+    event_name       VARCHAR(150) NULL,
+    art_request_id   INT UNSIGNED NULL,                -- FK criada na Fase 4
+    uploaded_by      INT UNSIGNED NULL,
+    guest_upload_id  INT UNSIGNED NULL,
+    upload_ip        VARCHAR(45)  NULL,
+    moderated_by     INT UNSIGNED NULL,
+    moderated_at     DATETIME     NULL,
+    reject_reason    VARCHAR(500) NULL,
+    trashed_at       DATETIME     NULL,
+    trashed_by       INT UNSIGNED NULL,
+    created_at       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at       DATETIME     NULL ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_files_folder (folder_id, status),
+    KEY idx_files_status (status, created_at),
+    KEY idx_files_sha (sha256),
+    KEY idx_files_uploader (uploaded_by),
+    KEY idx_files_guest (guest_upload_id),
+    KEY idx_files_category (category),
+    KEY idx_files_event (event_id),
+    KEY idx_files_name (original_name),
+    CONSTRAINT fk_files_folder FOREIGN KEY (folder_id) REFERENCES folders (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_files_uploader FOREIGN KEY (uploaded_by) REFERENCES users (id) ON DELETE SET NULL,
+    CONSTRAINT fk_files_guest FOREIGN KEY (guest_upload_id) REFERENCES guest_uploads (id) ON DELETE SET NULL,
+    CONSTRAINT fk_files_moderator FOREIGN KEY (moderated_by) REFERENCES users (id) ON DELETE SET NULL,
+    CONSTRAINT fk_files_trasher FOREIGN KEY (trashed_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS tags (
+    id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name       VARCHAR(60) NOT NULL,
+    slug       VARCHAR(60) NOT NULL,
+    created_at DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_tags_slug (slug)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS file_tags (
+    file_id INT UNSIGNED NOT NULL,
+    tag_id  INT UNSIGNED NOT NULL,
+    PRIMARY KEY (file_id, tag_id),
+    KEY idx_file_tags_tag (tag_id),
+    CONSTRAINT fk_file_tags_file FOREIGN KEY (file_id) REFERENCES files (id) ON DELETE CASCADE,
+    CONSTRAINT fk_file_tags_tag FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS upload_sessions (
+    id              CHAR(32)     NOT NULL PRIMARY KEY,
+    user_id         INT UNSIGNED NULL,
+    guest_upload_id INT UNSIGNED NULL,
+    folder_id       INT UNSIGNED NULL,
+    original_name   VARCHAR(255) NOT NULL,
+    size_bytes      BIGINT UNSIGNED NOT NULL,
+    chunk_size      INT UNSIGNED NOT NULL,
+    chunks_total    INT UNSIGNED NOT NULL,
+    status          ENUM('aberto','montado','duplicado','concluido','cancelado') NOT NULL DEFAULT 'aberto',
+    assembled_path  VARCHAR(255) NULL,
+    sha256          CHAR(64)     NULL,
+    meta            TEXT         NULL,       -- JSON com dados do formulário (descrição, tags, miniatura...)
+    file_id         INT UNSIGNED NULL,
+    ip              VARCHAR(45)  NULL,
+    created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME     NULL ON UPDATE CURRENT_TIMESTAMP,
+    expires_at      DATETIME     NOT NULL,
+    KEY idx_upload_sessions_expires (expires_at),
+    KEY idx_upload_sessions_user (user_id),
+    KEY idx_upload_sessions_guest (guest_upload_id),
+    CONSTRAINT fk_upload_sessions_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_upload_sessions_guest FOREIGN KEY (guest_upload_id) REFERENCES guest_uploads (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS share_links (
+    id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    token         CHAR(40)     NOT NULL,
+    file_id       INT UNSIGNED NULL,
+    folder_id     INT UNSIGNED NULL,
+    label         VARCHAR(150) NULL,
+    expires_at    DATETIME     NULL,
+    max_downloads INT UNSIGNED NULL,
+    downloads     INT UNSIGNED NOT NULL DEFAULT 0,
+    active        TINYINT(1)   NOT NULL DEFAULT 1,
+    created_by    INT UNSIGNED NULL,
+    created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_share_links_token (token),
+    KEY idx_share_links_file (file_id),
+    KEY idx_share_links_folder (folder_id),
+    CONSTRAINT fk_share_links_file FOREIGN KEY (file_id) REFERENCES files (id) ON DELETE CASCADE,
+    CONSTRAINT fk_share_links_folder FOREIGN KEY (folder_id) REFERENCES folders (id) ON DELETE CASCADE,
+    CONSTRAINT fk_share_links_creator FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS download_log (
+    id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    file_id       INT UNSIGNED NULL,
+    user_id       INT UNSIGNED NULL,
+    share_link_id INT UNSIGNED NULL,
+    kind          ENUM('download','visualizacao','zip','original') NOT NULL DEFAULT 'download',
+    ip            VARCHAR(45)  NULL,
+    user_agent    VARCHAR(255) NULL,
+    created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_download_log_file (file_id, created_at),
+    KEY idx_download_log_user (user_id),
+    CONSTRAINT fk_download_log_file FOREIGN KEY (file_id) REFERENCES files (id) ON DELETE SET NULL,
+    CONSTRAINT fk_download_log_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL,
+    CONSTRAINT fk_download_log_share FOREIGN KEY (share_link_id) REFERENCES share_links (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------
+-- Direito de imagem
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS image_restrictions (
+    id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    person_name   VARCHAR(150) NOT NULL,
+    is_minor      TINYINT(1)   NOT NULL DEFAULT 0,
+    guardian_name VARCHAR(150) NULL,
+    contact       VARCHAR(100) NULL,
+    notes         TEXT         NULL,
+    photo_path    VARCHAR(120) NULL,     -- foto de referência (só equipe de mídia)
+    active        TINYINT(1)   NOT NULL DEFAULT 1,
+    created_by    INT UNSIGNED NULL,
+    created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    DATETIME     NULL ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_image_restrictions_name (person_name),
+    CONSTRAINT fk_image_restrictions_creator FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS file_restrictions (
+    file_id        INT UNSIGNED NOT NULL,
+    restriction_id INT UNSIGNED NOT NULL,
+    PRIMARY KEY (file_id, restriction_id),
+    CONSTRAINT fk_file_restrictions_file FOREIGN KEY (file_id) REFERENCES files (id) ON DELETE CASCADE,
+    CONSTRAINT fk_file_restrictions_restriction FOREIGN KEY (restriction_id) REFERENCES image_restrictions (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------
 -- Dados iniciais
 -- ---------------------------------------------------------------------
 INSERT IGNORE INTO media_functions (name, slug, sort_order) VALUES
@@ -191,3 +386,10 @@ VALUES (1, 'Administrador', 'admin@admoema.com.br',
 
 INSERT IGNORE INTO user_roles (user_id, app_code, role) VALUES (1, 'midia', 'admin');
 INSERT IGNORE INTO media_members (user_id, member_status) VALUES (1, 'ativo');
+
+-- Pastas iniciais do repositório (raiz)
+INSERT IGNORE INTO folders (id, name, visibility, is_system, sort_order) VALUES
+    (1, 'Eventos',            'midia',   1, 10),
+    (2, 'Ministérios',        'midia',   1, 20),
+    (3, 'Identidade Visual',  'midia',   1, 30),
+    (4, 'Artes Finais',       'membros', 1, 40);

@@ -46,8 +46,8 @@ final class User
         $params = ['app' => APP_CODE];
 
         if (($filters['q'] ?? '') !== '') {
-            $where[] = '(u.name LIKE :q OR u.email LIKE :q)';
-            $params['q'] = '%' . $filters['q'] . '%';
+            $where[] = '(u.name LIKE :q1 OR u.email LIKE :q2)';
+            $params['q1'] = $params['q2'] = '%' . $filters['q'] . '%';
         }
         if (($filters['role'] ?? '') !== '') {
             $where[] = 'r.role = :role';

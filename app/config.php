@@ -33,7 +33,16 @@ function env_int(string $key, int $default): int
     return ctype_digit($value) ? (int) $value : $default;
 }
 
-define('APP_VERSION', '1.0.0');
+function env_bool(string $key, bool $default = false): bool
+{
+    $value = strtolower(env($key));
+    if ($value === '') {
+        return $default;
+    }
+    return in_array($value, ['1', 'true', 'sim', 'yes', 'on'], true);
+}
+
+define('APP_VERSION', '2.0.0');
 define('APP_CODE', 'midia'); // código deste sistema em user_roles
 define('APP_ENV', env('APP_ENV', 'production'));
 define('APP_NAME', env('APP_NAME', 'Central de Mídia ADMoema'));
@@ -59,6 +68,29 @@ define('DPO_CONTACT', env('DPO_CONTACT'));
 
 define('STORAGE_PATH', rtrim(env('STORAGE_PATH', APP_ROOT . '/storage'), '/'));
 define('LOG_PATH', STORAGE_PATH . '/logs');
+
+// Repositório de arquivos
+define('STORAGE_DRIVER', env('STORAGE_DRIVER', 'local'));
+define('UPLOAD_CHUNK_BYTES', env_int('UPLOAD_CHUNK_MB', 5) * 1024 * 1024);
+define('UPLOAD_MAX_BYTES', env_int('UPLOAD_MAX_MB', 2048) * 1024 * 1024);
+define('UPLOAD_SESSION_HOURS', env_int('UPLOAD_SESSION_HOURS', 24));
+define('QUOTA_GB', [
+    'admin'            => env_int('QUOTA_GB_ADMIN', 0),
+    'coordenador'      => env_int('QUOTA_GB_COORDENADOR', 20),
+    'membro_midia'     => env_int('QUOTA_GB_MEMBRO_MIDIA', 20),
+    'lider_ministerio' => env_int('QUOTA_GB_LIDER_MINISTERIO', 2),
+    'pastor'           => env_int('QUOTA_GB_PASTOR', 2),
+    'membro_igreja'    => env_int('QUOTA_GB_MEMBRO_IGREJA', 2),
+]);
+define('STORAGE_ALERT_GB', env_int('STORAGE_ALERT_GB', 40));
+define('GUEST_MAX_FILES_PER_HOUR', env_int('GUEST_MAX_FILES_PER_HOUR', 30));
+define('GUEST_MAX_MB_PER_DAY', env_int('GUEST_MAX_MB_PER_DAY', 500));
+define('GUEST_MAX_FILE_BYTES', env_int('GUEST_MAX_FILE_MB', 500) * 1024 * 1024);
+define('HCAPTCHA_ENABLED', env_bool('HCAPTCHA_ENABLED') && env('HCAPTCHA_SITE_KEY') !== '' && env('HCAPTCHA_SECRET') !== '');
+define('HCAPTCHA_SITE_KEY', env('HCAPTCHA_SITE_KEY'));
+define('HCAPTCHA_SECRET', env('HCAPTCHA_SECRET'));
+define('RETENTION_REJECTED_DAYS', env_int('RETENTION_REJECTED_DAYS', 7));
+define('RETENTION_TRASH_DAYS', env_int('RETENTION_TRASH_DAYS', 30));
 
 // Caminho base das URLs (ex.: "/midia"). Vem do BASE_URL; se vazio, é deduzido do script.
 define('BASE_PATH', (static function (): string {

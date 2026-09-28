@@ -32,11 +32,18 @@
     </div></a>
   </div>
 </div>
+<?php if (!empty($quarantine)): ?>
+  <div class="alert alert-warning"><i class="bi bi-shield-check"></i> Há <strong><?= $quarantine ?></strong> arquivo(s) aguardando moderação. <a href="<?= url('/moderacao') ?>" class="alert-link">Abrir quarentena</a></div>
+<?php endif; ?>
 <?php if ($stats['lgpd']): ?>
   <div class="alert alert-info"><i class="bi bi-shield-check"></i> Há <strong><?= $stats['lgpd'] ?></strong> solicitação(ões) de privacidade aguardando resposta. <a href="<?= url('/privacidade') ?>" class="alert-link">Ver fila</a></div>
 <?php endif; ?>
 <?php endif; ?>
 
+<?php if (!empty($recentFiles)): ?>
+  <div class="d-flex justify-content-between align-items-center mb-2"><h2 class="h6 text-muted mb-0">Arquivos recentes</h2><a href="<?= url('/arquivos') ?>" class="small">Ver repositório</a></div>
+  <div class="file-grid mb-4"><?php foreach ($recentFiles as $file) partial('file_card', ['file' => $file, 'selectable' => false]); ?></div>
+<?php endif; ?>
 <div class="row g-3">
   <?php if (!empty($byFunction)): ?>
   <div class="col-lg-6">
