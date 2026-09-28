@@ -1,4 +1,4 @@
-<?php $now = time(); $icsUrl = BASE_URL . url('/calendario/' . $icsToken . '.ics'); ?>
+<?php $now = time(); $icsUrl = absolute_url('/calendario/' . $icsToken . '.ics'); ?>
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
   <h1 class="h4 mb-0">Minha escala</h1>
   <div class="d-flex gap-2">
@@ -7,7 +7,12 @@
   </div>
 </div>
 <div class="collapse mb-3" id="icsBox"><div class="card card-body small">
-  <p class="mb-2">Adicione este endereço como "calendário por URL" no Google Agenda, iPhone ou Outlook. Ele atualiza sozinho quando a escala mudar. <strong>Não compartilhe</strong>: o link é pessoal.</p>
+  <p class="mb-2">Copie o endereço abaixo e adicione como calendário por URL. Ele atualiza sozinho quando a escala mudar (o Google leva algumas horas para sincronizar). <strong>Não compartilhe</strong>: o link é pessoal.</p>
+  <ul class="mb-2 ps-3">
+    <li><strong>Google Agenda (no computador):</strong> abra <a href="https://calendar.google.com" target="_blank" rel="noopener">calendar.google.com</a> → à esquerda, ao lado de "Outras agendas", clique em <strong>+</strong> → <strong>Por URL</strong> → cole o endereço → <strong>Adicionar agenda</strong>. Ela aparece também no app do celular.</li>
+    <li><strong>iPhone:</strong> Ajustes → Calendário → Contas → Adicionar conta → Outra → <strong>Adicionar calendário assinado</strong> → cole o endereço.</li>
+    <li><strong>Outlook:</strong> Adicionar calendário → Assinar da web → cole o endereço.</li>
+  </ul>
   <div class="d-flex gap-2 align-items-center flex-wrap"><input type="text" id="icsUrl" class="form-control form-control-sm share-url flex-grow-1 w-auto" value="<?= e($icsUrl) ?>" readonly><button class="btn btn-sm btn-outline-dark" type="button" data-copy-input="icsUrl"><i class="bi bi-clipboard"></i> Copiar</button>
     <form method="post" action="<?= url('/minha-escala/ics/renovar') ?>" data-confirm="Gerar novo link? O atual deixa de funcionar."><?= Csrf::field() ?><button class="btn btn-sm btn-link text-danger">gerar novo link</button></form></div>
 </div></div>

@@ -9,7 +9,7 @@
       <li><i class="bi <?= $curl ? 'bi-check-circle text-success' : 'bi-x-circle text-danger' ?>"></i> Extensão cURL</li>
       <li><i class="bi bi-clock"></i> Rotinas diárias às <?= NOTIFY_DAILY_HOUR ?>h · última: <?= e($lastDaily ? format_date($lastDaily) : 'nunca') ?></li>
     </ul>
-    <div class="small text-muted mt-2">Endpoints para o n8n chamar: <code><?= e(BASE_URL . url('/api/n8n/ping')) ?></code> (GET) e <code><?= e(BASE_URL . url('/api/n8n/entrada')) ?></code> (POST), com header <code>X-Webhook-Secret</code>.</div>
+    <div class="small text-muted mt-2">Endpoints para o n8n chamar: <code><?= e(absolute_url('/api/n8n/ping')) ?></code> (GET) e <code><?= e(absolute_url('/api/n8n/entrada')) ?></code> (POST), com header <code>X-Webhook-Secret</code>.</div>
   </div></div></div>
   <div class="col-md-4"><div class="card h-100"><div class="card-body">
     <div class="fw-semibold mb-2">Fila</div>

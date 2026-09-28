@@ -29,7 +29,7 @@ final class PasswordResetController
         $user = User::findByEmail($email);
         if ($user && $user['status'] === 'ativo' && PasswordReset::recentCount((int) $user['id']) < 3) {
             $token = PasswordReset::issue((int) $user['id']);
-            $link = BASE_URL . url('/redefinir-senha/' . $token);
+            $link = absolute_url('/redefinir-senha/' . $token);
             $body = "Olá, {$user['name']}.\n\n"
                 . "Recebemos um pedido para redefinir a senha do seu acesso à " . APP_NAME . ".\n\n"
                 . "Para criar uma nova senha, abra o link abaixo (válido por " . PASSWORD_RESET_MINUTES . " minutos e de uso único):\n\n"

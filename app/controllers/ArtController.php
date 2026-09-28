@@ -131,7 +131,7 @@ final class ArtController
         ArtRequest::set($id, $fields);
         ArtWorkflow::log($id, $u ? 'Designer definido: ' . $u['name'] . '.' : 'Designer removido.');
         if ($u) {
-            Notifier::notify('arte.status', [(int) $u['id']], "🎨 Você é o(a) designer de *{$r['title']}* (publicação em " . format_date($r['publish_on']) . ").\nVer: " . BASE_URL . url('/artes/' . $id), ['request_id' => $id, 'status' => 'designer']);
+            Notifier::notify('arte.status', [(int) $u['id']], "🎨 Você é o(a) designer de *{$r['title']}* (publicação em " . format_date($r['publish_on']) . ").\nVer: " . absolute_url('/artes/' . $id), ['request_id' => $id, 'status' => 'designer']);
         }
         flash('success', $u ? $u['name'] . ' é o(a) designer deste pedido.' : 'Designer removido.');
         redirect('/artes/' . $id);

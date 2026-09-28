@@ -13,7 +13,7 @@
       <td><?= $valid ? '<span class="badge text-bg-success">ativo</span>' : '<span class="badge text-bg-secondary">' . ((int) $l['active'] ? 'expirado' : 'desativado') . '</span>' ?></td>
       <td class="text-end text-nowrap">
         <?php if ($valid): ?>
-          <button class="btn btn-sm btn-outline-secondary" type="button" data-copy="<?= e(BASE_URL . url('/compartilhar/' . $l['token'])) ?>" title="Copiar link"><i class="bi bi-clipboard"></i></button>
+          <button class="btn btn-sm btn-outline-secondary" type="button" data-copy="<?= e(absolute_url('/compartilhar/' . $l['token'])) ?>" title="Copiar link"><i class="bi bi-clipboard"></i></button>
           <form method="post" action="<?= url('/compartilhamentos/' . (int) $l['id'] . '/desativar') ?>" class="d-inline"><?= Csrf::field() ?><button class="btn btn-sm btn-outline-danger" title="Desativar"><i class="bi bi-x-lg"></i></button></form>
         <?php endif; ?>
       </td>

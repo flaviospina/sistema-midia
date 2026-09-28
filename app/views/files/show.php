@@ -63,7 +63,7 @@
         <div class="col-sm-3"><label class="form-label small">Máx. downloads</label><input type="number" name="max_downloads" class="form-control form-control-sm" min="1" placeholder="sem limite"></div>
         <div class="col-sm-2"><button class="btn btn-sm btn-primary w-100">Gerar link</button></div>
         <?php foreach ($links as $l): if (!ShareLink::isValid($l)) continue; ?>
-          <div class="col-12 small d-flex align-items-center gap-2"><code class="share-url"><?= e(BASE_URL . url('/compartilhar/' . $l['token'])) ?></code>
+          <div class="col-12 small d-flex align-items-center gap-2"><code class="share-url"><?= e(absolute_url('/compartilhar/' . $l['token'])) ?></code>
             <span class="text-muted">até <?= e(format_date($l['expires_at'])) ?> · <?= (int) $l['downloads'] ?><?= $l['max_downloads'] ? '/' . (int) $l['max_downloads'] : '' ?> download(s)</span>
             <button class="btn btn-sm btn-link text-danger p-0" form="deact<?= (int) $l['id'] ?>">desativar</button></div>
           <form id="deact<?= (int) $l['id'] ?>" method="post" action="<?= url('/compartilhamentos/' . (int) $l['id'] . '/desativar') ?>"><?= Csrf::field() ?></form>

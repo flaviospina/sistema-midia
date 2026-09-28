@@ -63,7 +63,7 @@
     <?php if ($links): ?>
       <div class="col-12 small">
         <?php foreach ($links as $l): if (!ShareLink::isValid($l)) continue; ?>
-          <div class="d-flex align-items-center gap-2 mt-1"><code class="share-url"><?= e(BASE_URL . url('/compartilhar/' . $l['token'])) ?></code>
+          <div class="d-flex align-items-center gap-2 mt-1"><code class="share-url"><?= e(absolute_url('/compartilhar/' . $l['token'])) ?></code>
             <span class="text-muted">até <?= e(format_date($l['expires_at'])) ?> · <?= (int) $l['downloads'] ?> download(s)</span>
             <button class="btn btn-sm btn-link text-danger p-0" form="deact<?= (int) $l['id'] ?>">desativar</button></div>
           <form id="deact<?= (int) $l['id'] ?>" method="post" action="<?= url('/compartilhamentos/' . (int) $l['id'] . '/desativar') ?>"><?= Csrf::field() ?></form>

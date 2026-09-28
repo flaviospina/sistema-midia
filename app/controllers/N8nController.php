@@ -56,7 +56,7 @@ final class N8nController
         }
         $pending = Assignment::pendingForUser((int) $user['id']);
         if (!$pending) {
-            return ['sem_pendencia', "Olá, {$user['name']}! Você não tem escala aguardando confirmação. Veja sua agenda em " . BASE_URL . url('/minha-escala')];
+            return ['sem_pendencia', "Olá, {$user['name']}! Você não tem escala aguardando confirmação. Veja sua agenda em " . absolute_url('/minha-escala')];
         }
         $a = $pending[0];
         if ($yes) {

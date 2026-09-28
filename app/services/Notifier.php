@@ -116,7 +116,7 @@ final class Notifier
 
     private static function link(string $path): string
     {
-        return BASE_URL . url($path);
+        return absolute_url($path);
     }
 
     public static function assigned(array $a): void

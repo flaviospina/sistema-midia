@@ -17,6 +17,17 @@ function url(string $path = '/', array $query = []): string
     return $url;
 }
 
+/** URL absoluta (esquema + host + BASE_PATH + caminho) para e-mails, ICS, links e avisos. */
+function absolute_url(string $path = '/', array $query = []): string
+{
+    $origin = BASE_URL !== '' ? preg_replace('#^(https?://[^/]+).*$#', '$1', BASE_URL) : '';
+    if ($origin === '') {
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $origin = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+    }
+    return $origin . url($path, $query);
+}
+
 function asset(string $path): string
 {
     return url('assets/' . ltrim($path, '/')) . '?v=' . APP_VERSION;

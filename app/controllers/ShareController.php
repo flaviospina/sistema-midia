@@ -34,7 +34,7 @@ final class ShareController
         $label = mb_substr(input('label'), 0, 150) ?: null;
         $link = ShareLink::create($fileId, $folderId, $label, date('Y-m-d H:i:s', strtotime("+{$days} days")), $max);
         Logger::audit('link_criado', 'share_links', $link['id'], null, ['file_id' => $fileId, 'folder_id' => $folderId, 'dias' => $days, 'max' => $max]);
-        $_SESSION['_share_url'] = BASE_URL . url('/compartilhar/' . $link['token']);
+        $_SESSION['_share_url'] = absolute_url('/compartilhar/' . $link['token']);
         flash('success', 'Link criado. Válido por ' . $days . ' dia(s)' . ($max ? ", até {$max} download(s)" : '') . '.');
         redirect($back);
     }
