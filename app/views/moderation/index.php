@@ -32,7 +32,8 @@
             <div class="col-12"><select name="folder_id" class="form-select form-select-sm" required><option value="">Pasta de destino…</option><?php foreach ($folders as $id => $label): ?><option value="<?= (int) $id ?>"><?= e($label) ?></option><?php endforeach; ?></select></div>
             <div class="col-6"><input type="text" name="title" class="form-control form-control-sm" placeholder="Título (opcional)" maxlength="200"></div>
             <div class="col-6"><select name="category" class="form-select form-select-sm"><?php foreach (FileTypes::CATEGORIES as $k => $l): ?><option value="<?= e($k) ?>"<?= selected($k, $f['category']) ?>><?= e($l) ?></option><?php endforeach; ?></select></div>
-            <div class="col-12"><input type="text" name="tags" class="form-control form-control-sm" placeholder="Tags separadas por vírgula" value="<?= e($f['guest_event'] ?? $f['event_name'] ?? '') ?>"></div>
+            <div class="col-12"><input type="text" name="tags" class="form-control form-control-sm" placeholder="Tags separadas por vírgula"></div>
+            <div class="col-12"><select name="event_id" class="form-select form-select-sm"><option value="">Evento: <?= e($f['guest_event'] ?? $f['event_name'] ?? 'nenhum') ?></option><?php foreach ($events as $ev): ?><option value="<?= (int) $ev['id'] ?>"><?= e(Event::label($ev)) ?></option><?php endforeach; ?></select></div>
             <div class="col-12 small">
               <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" name="has_restriction" value="1" id="hr<?= $fid ?>"><label class="form-check-label" for="hr<?= $fid ?>">Contém pessoa com restrição de imagem</label></div>
               <?php if ($restrictions): ?>

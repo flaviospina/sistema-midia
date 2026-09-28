@@ -31,10 +31,10 @@ final class MediaFile
     {
         return Database::insert(
             'INSERT INTO files (folder_id, driver, storage_ref, display_ref, thumb_ref, original_name, extension, mime, size_bytes, sha256,
-                                width, height, duration_seconds, category, title, description, visibility, status, event_name,
+                                width, height, duration_seconds, category, title, description, visibility, status, event_id, event_name,
                                 uploaded_by, guest_upload_id, upload_ip)
              VALUES (:folder_id, :driver, :storage_ref, :display_ref, :thumb_ref, :original_name, :extension, :mime, :size_bytes, :sha256,
-                     :width, :height, :duration_seconds, :category, :title, :description, :visibility, :status, :event_name,
+                     :width, :height, :duration_seconds, :category, :title, :description, :visibility, :status, :event_id, :event_name,
                      :uploaded_by, :guest_upload_id, :upload_ip)',
             $d
         );
@@ -149,7 +149,7 @@ final class MediaFile
     {
         Database::run(
             'UPDATE files SET folder_id = :folder_id, title = :title, description = :description, category = :category,
-                    visibility = :visibility, event_name = :event_name, has_restriction = :has_restriction WHERE id = :id',
+                    visibility = :visibility, event_id = :event_id, event_name = :event_name, has_restriction = :has_restriction WHERE id = :id',
             $d + ['id' => $id]
         );
     }

@@ -1,0 +1,23 @@
+<?php $isEdit = $r !== null; $val = static fn(string $k, $d = '') => old($k, $r[$k] ?? $d); ?>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0"><?= e($title) ?></h1>
+  <a href="<?= url('/recorrencias') ?>" class="btn btn-sm btn-outline-secondary">Cancelar</a>
+</div>
+<form method="post" action="<?= $isEdit ? url('/recorrencias/' . (int) $r['id']) : url('/recorrencias') ?>" class="card narrow-card" novalidate>
+  <?= Csrf::field() ?>
+  <div class="card-body row g-3">
+    <div class="col-8"><label class="form-label required" for="title">Nome</label><input type="text" class="form-control<?= invalid('title') ?>" id="title" name="title" value="<?= e($val('title')) ?>" maxlength="150" placeholder="Culto de domingo à noite" required><?= field_error('title') ?></div>
+    <div class="col-4"><label class="form-label" for="event_type">Tipo</label><select class="form-select" id="event_type" name="event_type"><?php foreach (Event::TYPES as $k => $l): ?><option value="<?= e($k) ?>"<?= selected($k, $val('event_type', 'culto')) ?>><?= e($l) ?></option><?php endforeach; ?></select></div>
+    <div class="col-6"><label class="form-label" for="frequency">Frequência</label><select class="form-select" id="frequency" name="frequency"><?php foreach (Recurrence::FREQUENCIES as $k => $l): ?><option value="<?= e($k) ?>"<?= selected($k, $val('frequency', 'semanal')) ?>><?= e($l) ?></option><?php endforeach; ?></select></div>
+    <div class="col-6"><label class="form-label required" for="weekday">Dia da semana</label><select class="form-select<?= invalid('weekday') ?>" id="weekday" name="weekday"><?php foreach (Event::WEEKDAYS as $i => $w): ?><option value="<?= $i ?>"<?= selected($i, $val('weekday', '0')) ?>><?= e($w) ?></option><?php endforeach; ?></select><?= field_error('weekday') ?></div>
+    <div class="col-6" id="weekOfMonthWrap"><label class="form-label" for="week_of_month">Qual semana do mês</label><select class="form-select<?= invalid('week_of_month') ?>" id="week_of_month" name="week_of_month"><?php foreach (Recurrence::WEEKS_OF_MONTH as $k => $l): ?><option value="<?= $k ?>"<?= selected($k, $val('week_of_month', '1')) ?>><?= e($l) ?></option><?php endforeach; ?></select><?= field_error('week_of_month') ?></div>
+    <div class="col-3"><label class="form-label required" for="start_time">Horário</label><input type="time" class="form-control<?= invalid('start_time') ?>" id="start_time" name="start_time" value="<?= e(old('start_time', $isEdit ? substr((string) $r['start_time'], 0, 5) : '19:00')) ?>" required><?= field_error('start_time') ?></div>
+    <div class="col-3"><label class="form-label" for="duration_minutes">Duração (min)</label><input type="number" class="form-control<?= invalid('duration_minutes') ?>" id="duration_minutes" name="duration_minutes" value="<?= e($val('duration_minutes', '120')) ?>" min="15" max="1440"><?= field_error('duration_minutes') ?></div>
+    <div class="col-12"><label class="form-label" for="location">Local</label><input type="text" class="form-control" id="location" name="location" value="<?= e($val('location')) ?>" maxlength="150"></div>
+    <div class="col-12"><label class="form-label" for="template_id">Modelo de escala (vagas por função)</label><select class="form-select<?= invalid('template_id') ?>" id="template_id" name="template_id"><option value="">— sem vagas automáticas —</option><?php foreach ($templates as $t): ?><option value="<?= (int) $t['id'] ?>"<?= selected($t['id'], $val('template_id', $isEdit ? '' : '1')) ?>><?= e($t['name']) ?></option><?php endforeach; ?></select><?= field_error('template_id') ?></div>
+    <div class="col-6"><label class="form-label required" for="starts_on">Vigente a partir de</label><input type="date" class="form-control<?= invalid('starts_on') ?>" id="starts_on" name="starts_on" value="<?= e($val('starts_on', date('Y-m-d'))) ?>" required><?= field_error('starts_on') ?><div class="form-text">Para "a cada duas semanas", esta data define a semana par.</div></div>
+    <div class="col-6"><label class="form-label" for="ends_on">Até (opcional)</label><input type="date" class="form-control<?= invalid('ends_on') ?>" id="ends_on" name="ends_on" value="<?= e($val('ends_on')) ?>"><?= field_error('ends_on') ?></div>
+    <div class="col-12 form-check ms-2"><input class="form-check-input" type="checkbox" name="active" value="1" id="active"<?= checked((string) $val('active', '1') === '1') ?>><label class="form-check-label" for="active">Ativo (gera eventos)</label></div>
+  </div>
+  <div class="card-footer bg-white text-end"><button class="btn btn-primary"><i class="bi bi-check-lg"></i> Salvar</button></div>
+</form>

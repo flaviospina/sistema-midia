@@ -37,6 +37,13 @@ final class Auth
         'storage.view'        => ['admin', 'coordenador'],
         'restrictions.view'   => ['admin', 'coordenador', 'membro_midia'],
         'restrictions.manage' => ['admin', 'coordenador'],
+        // Eventos e escala
+        'events.view'         => ['admin', 'coordenador', 'membro_midia', 'lider_ministerio', 'pastor', 'membro_igreja'],
+        'events.manage'       => ['admin', 'coordenador'],
+        'schedule.view'       => ['admin', 'coordenador', 'membro_midia', 'pastor'],
+        'schedule.manage'     => ['admin', 'coordenador'],
+        'schedule.self'       => ['admin', 'coordenador', 'membro_midia'],
+        'unavailability.view' => ['admin', 'coordenador'],
     ];
 
     private static ?array $user = null;
@@ -173,6 +180,37 @@ final class Auth
     public static function roleLabel(?string $role): string
     {
         return self::ROLES[$role] ?? '—';
+    }
+
+    /**
+     * Funções que o usuário logado pode escalar: admin todas; coordenador só as áreas que coordena
+     * (se não coordenar nenhuma, todas). Devolve null para "todas".
+     */
+    public static function coordinatedFunctionIds(): ?array
+    {
+        static $ids = false;
+        if ($ids === false) {
+            if (self::is('admin')) {
+                $ids = null;
+            } elseif (self::is('coordenador')) {
+                $list = array_map('intval', array_column(Database::all(
+                    'SELECT function_id FROM member_functions WHERE user_id = :u AND is_coordinator = 1', ['u' => self::id()]
+                ), 'function_id'));
+                $ids = $list ?: null;
+            } else {
+                $ids = [];
+            }
+        }
+        return $ids;
+    }
+
+    public static function canScheduleFunction(int $functionId): bool
+    {
+        if (!self::can('schedule.manage')) {
+            return false;
+        }
+        $ids = self::coordinatedFunctionIds();
+        return $ids === null || in_array($functionId, $ids, true);
     }
 
     /** IDs dos ministérios do usuário logado (cache por requisição). */

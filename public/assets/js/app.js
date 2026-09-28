@@ -5,6 +5,23 @@
   // Barras de progresso estáticas (largura vem de data-width; CSP não permite style inline)
   document.querySelectorAll('[data-width]').forEach(function (el) { el.style.width = el.dataset.width + '%'; });
 
+  // Indisponibilidade: campos conforme o tipo
+  var kinds = document.querySelectorAll('input[name="kind"]');
+  if (kinds.length) {
+    var syncKind = function () {
+      var k = (document.querySelector('input[name="kind"]:checked') || {}).value;
+      document.querySelectorAll('[data-kind]').forEach(function (el) { el.classList.toggle('d-none', el.dataset.kind !== k); });
+    };
+    kinds.forEach(function (r) { r.addEventListener('change', syncKind); }); syncKind();
+  }
+  // Recorrência: "semana do mês" só para frequência mensal
+  var freq = document.getElementById('frequency');
+  var wom = document.getElementById('weekOfMonthWrap');
+  if (freq && wom) { var syncF = function () { wom.classList.toggle('d-none', freq.value !== 'mensal'); }; freq.addEventListener('change', syncF); syncF(); }
+
+  // Selects que enviam o formulário ao mudar (CSP não permite onchange inline)
+  document.querySelectorAll('select[data-autosubmit]').forEach(function (sel) { sel.addEventListener('change', function () { sel.form.submit(); }); });
+
   // Confirmação em formulários com data-confirm
   document.addEventListener('submit', function (ev) {
     var form = ev.target;

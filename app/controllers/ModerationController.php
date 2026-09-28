@@ -11,6 +11,7 @@ final class ModerationController
             'files'        => MediaFile::quarantine(),
             'folders'      => Folder::options(),
             'restrictions' => ImageRestriction::all(true),
+            'events'       => Event::forSelect(90, 30),
         ]);
     }
 
@@ -37,12 +38,15 @@ final class ModerationController
             $newRef = $driver->store($path, 'files', $file['extension']);
         }
 
-        Database::transaction(static function () use ($id, $folderId, $category, $restricted, $restrictionIds, $newRef): void {
+        $event = ctype_digit(input('event_id')) ? Database::one('SELECT id, title FROM events WHERE id = :id', ['id' => (int) input('event_id')]) : null;
+        Database::transaction(static function () use ($id, $folderId, $category, $restricted, $restrictionIds, $newRef, $event): void {
             Database::run(
                 'UPDATE files SET status = "aprovado", folder_id = :folder, category = :category, has_restriction = :r, storage_ref = :ref,
-                        title = COALESCE(NULLIF(:title, ""), title), moderated_by = :by, moderated_at = NOW(), reject_reason = NULL WHERE id = :id',
+                        title = COALESCE(NULLIF(:title, ""), title), event_id = COALESCE(:event_id, event_id), event_name = COALESCE(:event_name, event_name),
+                        moderated_by = :by, moderated_at = NOW(), reject_reason = NULL WHERE id = :id',
                 ['folder' => $folderId, 'category' => $category, 'r' => $restricted || $restrictionIds ? 1 : 0, 'ref' => $newRef,
-                 'title' => mb_substr(input('title'), 0, 200), 'by' => Auth::id(), 'id' => $id]
+                 'title' => mb_substr(input('title'), 0, 200), 'event_id' => $event ? (int) $event['id'] : null, 'event_name' => $event ? $event['title'] : null,
+                 'by' => Auth::id(), 'id' => $id]
             );
             if (input('tags') !== '') {
                 Tag::sync($id, input('tags'));

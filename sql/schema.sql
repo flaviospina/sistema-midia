@@ -366,6 +366,150 @@ CREATE TABLE IF NOT EXISTS file_restrictions (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
+-- Eventos e escala (Fase 3)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS schedule_templates (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name        VARCHAR(100) NOT NULL,
+    description VARCHAR(300) NULL,
+    active      TINYINT(1)   NOT NULL DEFAULT 1,
+    created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  DATETIME     NULL ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_schedule_templates_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS schedule_template_slots (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    template_id INT UNSIGNED NOT NULL,
+    function_id INT UNSIGNED NOT NULL,
+    quantity    TINYINT UNSIGNED NOT NULL DEFAULT 1,
+    notes       VARCHAR(200) NULL,
+    UNIQUE KEY uq_template_slots (template_id, function_id),
+    CONSTRAINT fk_template_slots_template FOREIGN KEY (template_id) REFERENCES schedule_templates (id) ON DELETE CASCADE,
+    CONSTRAINT fk_template_slots_function FOREIGN KEY (function_id) REFERENCES media_functions (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS event_recurrences (
+    id               INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    title            VARCHAR(150) NOT NULL,
+    event_type       ENUM('culto','especial','ensaio','reuniao','outro') NOT NULL DEFAULT 'culto',
+    frequency        ENUM('semanal','quinzenal','mensal') NOT NULL DEFAULT 'semanal',
+    weekday          TINYINT UNSIGNED NOT NULL,          -- 0 = domingo ... 6 = sábado
+    week_of_month    TINYINT NULL,                       -- mensal: 1..4 = n-ésimo; -1 = último
+    start_time       TIME NOT NULL,
+    duration_minutes SMALLINT UNSIGNED NOT NULL DEFAULT 120,
+    location         VARCHAR(150) NULL,
+    template_id      INT UNSIGNED NULL,
+    starts_on        DATE NOT NULL,
+    ends_on          DATE NULL,
+    active           TINYINT(1) NOT NULL DEFAULT 1,
+    created_by       INT UNSIGNED NULL,
+    created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at       DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_recurrences_template FOREIGN KEY (template_id) REFERENCES schedule_templates (id) ON DELETE SET NULL,
+    CONSTRAINT fk_recurrences_creator FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS events (
+    id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    title         VARCHAR(150) NOT NULL,
+    event_type    ENUM('culto','especial','ensaio','reuniao','outro') NOT NULL DEFAULT 'culto',
+    starts_at     DATETIME NOT NULL,
+    ends_at       DATETIME NULL,
+    location      VARCHAR(150) NULL,
+    description   TEXT NULL,
+    ministry_id   INT UNSIGNED NULL,
+    recurrence_id INT UNSIGNED NULL,
+    status        ENUM('agendado','cancelado','concluido') NOT NULL DEFAULT 'agendado',
+    notes         TEXT NULL,                            -- observações da escala (visíveis à equipe)
+    created_by    INT UNSIGNED NULL,
+    created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_events_starts (starts_at),
+    KEY idx_events_status (status, starts_at),
+    UNIQUE KEY uq_events_recurrence_day (recurrence_id, starts_at),
+    CONSTRAINT fk_events_ministry FOREIGN KEY (ministry_id) REFERENCES ministries (id) ON DELETE SET NULL,
+    CONSTRAINT fk_events_recurrence FOREIGN KEY (recurrence_id) REFERENCES event_recurrences (id) ON DELETE SET NULL,
+    CONSTRAINT fk_events_creator FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS event_slots (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    event_id    INT UNSIGNED NOT NULL,
+    function_id INT UNSIGNED NOT NULL,
+    quantity    TINYINT UNSIGNED NOT NULL DEFAULT 1,
+    notes       VARCHAR(200) NULL,
+    UNIQUE KEY uq_event_slots (event_id, function_id),
+    CONSTRAINT fk_event_slots_event FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE,
+    CONSTRAINT fk_event_slots_function FOREIGN KEY (function_id) REFERENCES media_functions (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS assignments (
+    id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    event_id     INT UNSIGNED NOT NULL,
+    function_id  INT UNSIGNED NOT NULL,
+    user_id      INT UNSIGNED NOT NULL,
+    status       ENUM('pendente','confirmado','recusado') NOT NULL DEFAULT 'pendente',
+    assigned_by  INT UNSIGNED NULL,
+    responded_at DATETIME NULL,
+    note         VARCHAR(300) NULL,                     -- motivo da recusa / observação
+    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_assignments (event_id, function_id, user_id),
+    KEY idx_assignments_user (user_id, status),
+    KEY idx_assignments_event (event_id),
+    CONSTRAINT fk_assignments_event FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE,
+    CONSTRAINT fk_assignments_function FOREIGN KEY (function_id) REFERENCES media_functions (id) ON DELETE CASCADE,
+    CONSTRAINT fk_assignments_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_assignments_assigner FOREIGN KEY (assigned_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS swap_requests (
+    id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    assignment_id INT UNSIGNED NOT NULL,
+    from_user_id  INT UNSIGNED NOT NULL,
+    to_user_id    INT UNSIGNED NOT NULL,
+    reason        VARCHAR(300) NULL,
+    status        ENUM('aguardando_membro','aguardando_coordenador','aprovada','recusada_membro','rejeitada','cancelada') NOT NULL DEFAULT 'aguardando_membro',
+    decided_by    INT UNSIGNED NULL,
+    decided_at    DATETIME NULL,
+    created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_swaps_status (status),
+    KEY idx_swaps_to (to_user_id, status),
+    CONSTRAINT fk_swaps_assignment FOREIGN KEY (assignment_id) REFERENCES assignments (id) ON DELETE CASCADE,
+    CONSTRAINT fk_swaps_from FOREIGN KEY (from_user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_swaps_to FOREIGN KEY (to_user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_swaps_decider FOREIGN KEY (decided_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS unavailability (
+    id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id    INT UNSIGNED NOT NULL,
+    kind       ENUM('data','recorrente') NOT NULL DEFAULT 'data',
+    date_from  DATE NULL,                               -- data única / início do período
+    date_to    DATE NULL,                               -- fim do período (data) ou limite (recorrente)
+    weekday    TINYINT UNSIGNED NULL,                   -- recorrente: 0 = domingo ... 6 = sábado
+    time_from  TIME NULL,                               -- opcional: só parte do dia
+    time_to    TIME NULL,
+    reason     VARCHAR(200) NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_unavailability_user (user_id, kind),
+    KEY idx_unavailability_dates (date_from, date_to),
+    CONSTRAINT fk_unavailability_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Token pessoal para assinar a escala em apps de calendário (ICS sem login)
+CREATE TABLE IF NOT EXISTS calendar_tokens (
+    user_id    INT UNSIGNED NOT NULL PRIMARY KEY,
+    token      CHAR(40) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_calendar_tokens_token (token),
+    CONSTRAINT fk_calendar_tokens_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------
 -- Dados iniciais
 -- ---------------------------------------------------------------------
 INSERT IGNORE INTO media_functions (name, slug, sort_order) VALUES
@@ -393,3 +537,9 @@ INSERT IGNORE INTO folders (id, name, visibility, is_system, sort_order) VALUES
     (2, 'Ministérios',        'midia',   1, 20),
     (3, 'Identidade Visual',  'midia',   1, 30),
     (4, 'Artes Finais',       'membros', 1, 40);
+
+-- Modelo de escala padrão de culto (edite as quantidades em Escala → Modelos)
+INSERT IGNORE INTO schedule_templates (id, name, description) VALUES (1, 'Culto padrão', 'Som, projeção, câmera, transmissão e fotografia');
+INSERT IGNORE INTO schedule_template_slots (template_id, function_id, quantity)
+SELECT 1, f.id, CASE f.slug WHEN 'camera' THEN 2 ELSE 1 END
+  FROM media_functions f WHERE f.slug IN ('som','projecao','camera','transmissao','fotografia');

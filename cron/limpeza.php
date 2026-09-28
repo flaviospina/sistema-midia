@@ -43,6 +43,10 @@ foreach ($trashed as $f) {
 }
 $report['lixeira_apagados'] = count($trashed);
 
+// Eventos: gera cultos fixos e encerra os que já passaram
+$report['eventos_gerados'] = Recurrence::generate();
+$report['eventos_concluidos'] = Event::closePast();
+
 // Links de compartilhamento vencidos há mais de 90 dias
 $report['links_removidos'] = Database::run('DELETE FROM share_links WHERE expires_at IS NOT NULL AND expires_at < DATE_SUB(NOW(), INTERVAL 90 DAY)')->rowCount();
 

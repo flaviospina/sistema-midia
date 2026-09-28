@@ -77,12 +77,9 @@ final class GuestController
         view('guest/done', ['title' => 'Envio concluído'], 'layout_auth');
     }
 
-    /** Eventos recentes informados em envios (a tabela de eventos chega na Fase 3). */
+    /** Eventos dos últimos 45 dias e próximos 15 (do calendário), como rótulos. */
     private function recentEvents(): array
     {
-        return array_column(Database::all(
-            'SELECT event_name, MAX(created_at) AS last FROM files WHERE event_name IS NOT NULL AND event_name <> "" AND created_at > DATE_SUB(NOW(), INTERVAL 60 DAY)
-              GROUP BY event_name ORDER BY last DESC LIMIT 12'
-        ), 'event_name');
+        return array_map(static fn(array $e) => $e['title'] . ' (' . format_date($e['starts_at']) . ')', Event::forSelect(45, 15));
     }
 }

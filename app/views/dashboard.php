@@ -32,6 +32,12 @@
     </div></a>
   </div>
 </div>
+<?php if (!empty($openSlots)): ?>
+  <div class="alert alert-warning"><i class="bi bi-people"></i> <strong><?= count($openSlots) ?></strong> evento(s) nos próximos 14 dias com vagas abertas ou recusas. <a href="<?= url('/escala/painel') ?>" class="alert-link">Painel da escala</a><?= !empty($pendingSwaps) ? ' · ' . $pendingSwaps . ' troca(s) para aprovar' : '' ?></div>
+<?php endif; ?>
+<?php if (!empty($mySwaps)): ?>
+  <div class="alert alert-info"><i class="bi bi-arrow-left-right"></i> Você tem <strong><?= count($mySwaps) ?></strong> pedido(s) de troca para responder. <a href="<?= url('/minha-escala') ?>" class="alert-link">Minha escala</a></div>
+<?php endif; ?>
 <?php if (!empty($quarantine)): ?>
   <div class="alert alert-warning"><i class="bi bi-shield-check"></i> Há <strong><?= $quarantine ?></strong> arquivo(s) aguardando moderação. <a href="<?= url('/moderacao') ?>" class="alert-link">Abrir quarentena</a></div>
 <?php endif; ?>
@@ -40,6 +46,39 @@
 <?php endif; ?>
 <?php endif; ?>
 
+<?php if (isset($myAssignments)): $pend = array_filter($myAssignments, static fn($a) => $a['status'] === 'pendente' && $a['event_status'] === 'agendado'); ?>
+<div class="row g-3 mb-3">
+  <div class="col-lg-6">
+    <div class="card h-100<?= $pend ? ' border-warning' : '' ?>">
+      <div class="card-header bg-white fw-semibold d-flex justify-content-between"><span>Minha escala (30 dias)</span><a href="<?= url('/minha-escala') ?>" class="small">ver tudo</a></div>
+      <?php if (!$myAssignments): ?><div class="card-body text-muted small">Nenhuma escala nos próximos 30 dias.</div><?php else: ?>
+      <ul class="list-group list-group-flush small">
+        <?php foreach (array_slice($myAssignments, 0, 6) as $a): ?>
+          <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+            <span><strong><?= e(format_date($a['starts_at'], 'd/m')) ?> <?= e(substr($a['starts_at'], 11, 5)) ?></strong> <?= e($a['event_title']) ?> · <?= e($a['function_name']) ?></span>
+            <span class="badge <?= $a['event_status'] === 'cancelado' ? 'text-bg-secondary' : ($a['status'] === 'confirmado' ? 'text-bg-success' : ($a['status'] === 'recusado' ? 'text-bg-secondary' : 'text-bg-warning')) ?>"><?= $a['event_status'] === 'cancelado' ? 'cancelado' : e(Assignment::STATUSES[$a['status']]) ?></span>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+      <?php if ($pend): ?><div class="card-footer bg-white"><a href="<?= url('/minha-escala') ?>" class="btn btn-sm btn-warning">Confirmar <?= count($pend) ?> escala(s)</a></div><?php endif; ?>
+      <?php endif; ?>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header bg-white fw-semibold d-flex justify-content-between"><span>Próximos eventos</span><a href="<?= url('/eventos') ?>" class="small">calendário</a></div>
+      <?php if (empty($upcoming)): ?><div class="card-body text-muted small">Nada nos próximos 7 dias.</div><?php else: ?>
+      <ul class="list-group list-group-flush small">
+        <?php foreach ($upcoming as $ev): ?><li class="list-group-item d-flex justify-content-between"><a href="<?= url('/eventos/' . (int) $ev['id']) ?>"><?= e($ev['title']) ?></a><span class="text-muted"><?= e(Event::WEEKDAYS[(int) date('w', strtotime($ev['starts_at']))]) ?> <?= e(format_date($ev['starts_at'], 'd/m H:i')) ?></span></li><?php endforeach; ?>
+      </ul>
+      <?php endif; ?>
+    </div>
+  </div>
+</div>
+<?php elseif (!empty($upcoming)): ?>
+  <div class="card mb-3"><div class="card-header bg-white fw-semibold d-flex justify-content-between"><span>Próximos eventos</span><a href="<?= url('/eventos') ?>" class="small">calendário</a></div>
+    <ul class="list-group list-group-flush small"><?php foreach ($upcoming as $ev): ?><li class="list-group-item d-flex justify-content-between"><a href="<?= url('/eventos/' . (int) $ev['id']) ?>"><?= e($ev['title']) ?></a><span class="text-muted"><?= e(format_date($ev['starts_at'], 'd/m H:i')) ?></span></li><?php endforeach; ?></ul></div>
+<?php endif; ?>
 <?php if (!empty($recentFiles)): ?>
   <div class="d-flex justify-content-between align-items-center mb-2"><h2 class="h6 text-muted mb-0">Arquivos recentes</h2><a href="<?= url('/arquivos') ?>" class="small">Ver repositório</a></div>
   <div class="file-grid mb-4"><?php foreach ($recentFiles as $file) partial('file_card', ['file' => $file, 'selectable' => false]); ?></div>

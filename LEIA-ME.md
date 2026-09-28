@@ -1,4 +1,4 @@
-# Central de Mídia ADMoema — Instalação (Fases 1 e 2)
+# Central de Mídia ADMoema — Instalação (Fases 1 a 3)
 
 Sistema do Ministério de Multimídia · AD Ministério do Belém · Setor 124 Moema.
 Requisitos: PHP 8.2+ (com PDO MySQL, GD, fileinfo, mbstring, zip, exif, curl), MySQL 5.7+/MariaDB 10.2+, Apache com `mod_rewrite`.
@@ -10,6 +10,7 @@ Requisitos: PHP 8.2+ (com PDO MySQL, GD, fileinfo, mbstring, zip, exif, curl), M
    - Pode ser importado de novo em atualizações futuras: só cria o que não existe.
    - Cria o administrador inicial `admin@admoema.com.br` com senha temporária **`TrocarAgora!2026`** (troca obrigatória no primeiro acesso). Para outro e-mail, edite o `INSERT` final antes de importar ou altere depois em *Pessoas*.
    - Cria as pastas iniciais do repositório: Eventos, Ministérios, Identidade Visual e Artes Finais.
+   - Cria o modelo de escala "Culto padrão" (som, projeção, 2 câmeras, transmissão, fotografia).
 
 ## 2. Arquivos
 
@@ -43,6 +44,7 @@ Escolha uma das duas formas. A **opção A** é a recomendada (pastas internas f
    - `DB_NAME`, `DB_USER`, `DB_PASS`
    - `DPO_CONTACT` (e-mail exibido no termo de privacidade)
    - Limites do repositório (já vêm com os valores combinados): `UPLOAD_MAX_MB=2048`, cotas `QUOTA_GB_*`, limites de convidado `GUEST_*`, `STORAGE_ALERT_GB`.
+   - Escala: `SCHEDULE_WEEKS_AHEAD` (semanas geradas à frente), `SCHEDULE_OVERLOAD_PER_MONTH` (alerta de sobrecarga), `SCHEDULE_ROTATION_DAYS` (janela do rodízio).
 2. Se a URL não abrir as páginas internas (erro 404 do Apache), descomente `RewriteBase /midia/` em `public/.htaccess`.
 3. Confira em cPanel → **Selecionar versão do PHP** que a versão é 8.2+ e que `pdo_mysql`, `gd`, `fileinfo`, `mbstring`, `zip`, `exif` e `curl` estão marcados.
    - `UPLOAD_CHUNK_MB` (padrão 5) precisa ser **menor** que `post_max_size` e `upload_max_filesize` do PHP (veja em *Opções do PHP*; se estiverem em 2M, reduza `UPLOAD_CHUNK_MB=1`).
@@ -56,7 +58,9 @@ Escolha uma das duas formas. A **opção A** é a recomendada (pastas internas f
 3. O sistema exigirá **nova senha** e o **aceite do termo**.
 4. Em *Pessoas → Nova pessoa* cadastre a equipe. Para cada pessoa, o sistema gera uma senha temporária que é exibida **uma única vez** — envie por WhatsApp/pessoalmente.
 5. Em *Ministérios* cadastre os ministérios e, no cadastro das pessoas, marque quem é líder de cada um.
-6. Em *Arquivos* crie as subpastas (ex.: Eventos › 2026 › Congresso). Para a pasta de um ministério, use visibilidade **"Equipe + ministério dono"** e escolha o ministério: os líderes dele passam a ver e enviar arquivos lá.
+6. Em *Administração → Cultos fixos* cadastre os cultos semanais (dia, horário, modelo de escala): os eventos das próximas semanas são gerados na hora e o cron mantém a agenda cheia. Em *Administração → Modelos de escala* ajuste as vagas por função.
+7. Em *Pessoas → Funções* marque quem é **coordenador** de cada área: coordenadores só escalam as funções que coordenam (se não coordenarem nenhuma, escalam todas).
+8. Em *Arquivos* crie as subpastas (ex.: Eventos › 2026 › Congresso). Para a pasta de um ministério, use visibilidade **"Equipe + ministério dono"** e escolha o ministério: os líderes dele passam a ver e enviar arquivos lá.
 
 ## 5. Cron (recomendado)
 
@@ -66,26 +70,34 @@ cPanel → **Cron Jobs**, uma vez por dia (ex.: 03:00):
 /usr/local/bin/php /home/USUARIO/midia_app/cron/limpeza.php
 ```
 
-Faz: limpeza de tentativas de login, anonimização de cadastros pendentes (90 dias), remoção de uploads não concluídos (24 h), exclusão de rejeitados (7 dias) e da lixeira (30 dias), links vencidos, alerta de espaço e logs antigos.
+Faz: limpeza de tentativas de login, anonimização de cadastros pendentes (90 dias), remoção de uploads não concluídos (24 h), exclusão de rejeitados (7 dias) e da lixeira (30 dias), links vencidos, alerta de espaço, logs antigos, **geração dos cultos fixos** e encerramento dos eventos passados.
 
 ## 6. Página pública de envio (QR Code)
 
 URL: `https://admoema.com.br/midia/enviar`. Gere o QR Code para o telão/boletim apontando para essa URL. O visitante informa nome, WhatsApp, ministério, evento e aceita a declaração de uso de imagem; os arquivos caem na **quarentena** e aparecem para coordenadores e administradores em *Quarentena*, onde são aprovados (escolhendo pasta e tags) ou rejeitados.
 
-## 7. Perfis de acesso
+## 7. Escala: como funciona
+
+- **Eventos** (calendário mensal ou lista) são criados à mão ou gerados pelos cultos fixos. Cada evento tem **vagas por função** (de um modelo ou ajustadas na tela *Montar escala*).
+- **Montar escala**: o coordenador escolhe pessoas por função (a lista mostra nível, quantas escalas nos últimos dias, indisponibilidade e conflito) ou clica em **Preencher automaticamente**: rodízio justo entre quem está apto/referência e disponível, priorizando quem serviu menos e há mais tempo, com ao menos um "referência" quando há 2+ vagas. Alertas aparecem para sobrecarga, conflito de horário, indisponibilidade e aprendiz escalado.
+- **Minha escala**: cada membro confirma ou recusa (com motivo), registra **indisponibilidades** (data, período ou dia fixo da semana) e pode **pedir troca** com um colega da mesma função — o colega aceita e o coordenador aprova. Link ICS pessoal para assinar no Google Agenda/iPhone.
+- **Painel da escala**: vagas abertas nos próximos 21 dias, recusas, sobrecarga e trocas pendentes.
+
+## 8. Perfis de acesso
 
 | Perfil | Pode |
 |---|---|
-| admin | Tudo, inclusive ver originais com EXIF e conteúdo "restrito" |
-| coordenador | Pessoas, funções da equipe, pastas, quarentena, restrições de imagem, links, armazenamento |
-| membro_midia | Enviar direto para pastas da equipe, ver restrições de imagem, criar links de compartilhamento |
-| lider_ministerio | Ver e enviar na pasta do seu ministério; ver o que for "todos os usuários" |
-| pastor / membro_igreja | Ver o que for "todos os usuários"; envios vão para a quarentena |
+| admin | Tudo, inclusive ver originais com EXIF, conteúdo "restrito" e escalar qualquer função |
+| coordenador | Pessoas, funções, pastas, quarentena, restrições, links, armazenamento; eventos, cultos fixos, modelos e escala das funções que coordena |
+| membro_midia | Enviar direto para pastas da equipe, restrições de imagem, links; minha escala, indisponibilidades, trocas |
+| lider_ministerio | Ver e enviar na pasta do seu ministério; ver eventos |
+| pastor | Ver eventos e a escala montada; ver o que for "todos os usuários" |
+| membro_igreja | Ver eventos; ver o que for "todos os usuários"; envios vão para a quarentena |
 | Convidado (sem login) | Só a página `/enviar` |
 
 Visibilidade das pastas: **restrito** (admin) · **equipe de mídia** · **equipe + ministério dono** · **todos os usuários logados**. Subpastas herdam; um arquivo pode sobrescrever a da pasta. Arquivo marcado "contém pessoa com restrição de imagem" fica sempre restrito.
 
-## 8. Onde ficam as coisas
+## 9. Onde ficam as coisas
 
 - Arquivos do repositório: `storage/files/AAAA/MM/` (nome aleatório; o nome original fica só no banco). Miniaturas em `storage/thumbs`, versão exibida sem EXIF/GPS em `storage/display`, quarentena em `storage/quarantine`. Nada disso é acessível por link direto: toda entrega passa por `/arquivos/{id}/download` com checagem de permissão e registro em `download_log`.
 - Fotos de perfil: `storage/photos/`. Fotos de referência de restrições: `storage/restrictions/`.
@@ -93,6 +105,6 @@ Visibilidade das pastas: **restrito** (admin) · **equipe de mídia** · **equip
 - Trilha de auditoria: *Administração → Auditoria*. Solicitações LGPD: *Administração → Privacidade*.
 - Espaço usado por pasta, tipo e pessoa: *Administração → Armazenamento*.
 
-## 9. Atualização de versão
+## 10. Atualização de versão
 
 Substitua os arquivos (menos `.env` e `storage/`) e importe novamente `sql/schema.sql`. Se o termo de privacidade mudar, aumente `TERMS_VERSION` no `.env`: todos serão convidados a aceitar a nova versão no próximo acesso.

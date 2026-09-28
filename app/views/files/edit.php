@@ -32,7 +32,11 @@
           </select>
         </div>
         <?php endif; ?>
-        <div class="col-md-6"><label class="form-label" for="event">Evento</label><input type="text" class="form-control" id="event" name="event" value="<?= e(old('event', $f['event_name'])) ?>" maxlength="150"></div>
+        <div class="col-md-6"><label class="form-label" for="event_id">Evento</label>
+          <select class="form-select" id="event_id" name="event_id"><option value="">— nenhum —</option>
+            <?php $found = false; foreach ($events as $ev): $found = $found || (int) $ev['id'] === (int) $f['event_id']; ?><option value="<?= (int) $ev['id'] ?>"<?= selected($ev['id'], old('event_id', $f['event_id'])) ?>><?= e(Event::label($ev)) ?></option><?php endforeach; ?>
+            <?php if ($f['event_id'] && !$found): ?><option value="<?= (int) $f['event_id'] ?>" selected><?= e($f['event_name']) ?></option><?php endif; ?>
+          </select><?php if ($f['event_name'] && !$f['event_id']): ?><div class="form-text">Evento informado no envio: "<?= e($f['event_name']) ?>"</div><input type="hidden" name="event" value="<?= e($f['event_name']) ?>"><?php endif; ?></div>
         <div class="col-md-6"><label class="form-label" for="tags">Tags</label><input type="text" class="form-control" id="tags" name="tags" value="<?= e(old('tags', Tag::textFor($f['tags']))) ?>" placeholder="separadas por vírgula"></div>
         <div class="col-12"><label class="form-label" for="description">Descrição</label><textarea class="form-control" id="description" name="description" rows="3" maxlength="2000"><?= e($val('description')) ?></textarea></div>
       </div>

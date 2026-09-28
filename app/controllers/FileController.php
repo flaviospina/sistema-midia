@@ -80,6 +80,8 @@ final class FileController
         }
         view('files/upload', [
             'title'      => 'Enviar arquivos',
+            'events'     => Event::forSelect(),
+            'eventId'    => ctype_digit(query('evento')) ? (int) query('evento') : null,
             'folders'    => $folders,
             'folderId'   => $folderId,
             'quota'      => Access::quotaBytes(),
@@ -120,6 +122,7 @@ final class FileController
             'folders'      => Auth::can('files.moderate') ? Folder::options() : Access::uploadableFolders(),
             'restrictions' => Auth::can('restrictions.view') ? ImageRestriction::all(true) : [],
             'linked'       => array_map('intval', array_column(MediaFile::restrictions($id), 'id')),
+            'events'       => Event::forSelect(365, 120),
         ]);
     }
 
@@ -148,13 +151,15 @@ final class FileController
         $restrictionIds = Auth::can('restrictions.view') && is_array($_POST['restrictions'] ?? null) ? $_POST['restrictions'] : array_map('intval', array_column(MediaFile::restrictions($id), 'id'));
         $hasRestriction = Auth::can('restrictions.view') ? (input('has_restriction') === '1' || $restrictionIds !== []) : (int) $file['has_restriction'];
 
+        $event = ctype_digit(input('event_id')) ? Database::one('SELECT id, title FROM events WHERE id = :id', ['id' => (int) input('event_id')]) : null;
         $data = [
             'folder_id'       => $folderId,
             'title'           => input('title') ?: null,
             'description'     => input('description') ?: null,
             'category'        => input('category') ?: $file['category'],
             'visibility'      => $canModerate ? (input('visibility') ?: null) : $file['visibility'],
-            'event_name'      => input('event') ?: null,
+            'event_id'        => $event ? (int) $event['id'] : null,
+            'event_name'      => $event ? $event['title'] : (input('event') ?: null),
             'has_restriction' => $hasRestriction ? 1 : 0,
         ];
         Database::transaction(static function () use ($id, $data, $restrictionIds): void {

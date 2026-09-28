@@ -88,7 +88,7 @@
   Uploader.prototype.meta = function () {
     var m = {};
     if (!this.metaForm) return m;
-    ['title', 'description', 'tags', 'event', 'category', 'visibility', 'folder_id'].forEach(function (k) {
+    ['title', 'description', 'tags', 'event', 'event_id', 'category', 'visibility', 'folder_id'].forEach(function (k) {
       var el = this.metaForm.querySelector('[name="' + k + '"]');
       if (el) m[k] = el.value;
     }, this);

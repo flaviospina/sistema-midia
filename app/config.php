@@ -42,7 +42,7 @@ function env_bool(string $key, bool $default = false): bool
     return in_array($value, ['1', 'true', 'sim', 'yes', 'on'], true);
 }
 
-define('APP_VERSION', '2.0.0');
+define('APP_VERSION', '3.0.0');
 define('APP_CODE', 'midia'); // código deste sistema em user_roles
 define('APP_ENV', env('APP_ENV', 'production'));
 define('APP_NAME', env('APP_NAME', 'Central de Mídia ADMoema'));
@@ -91,6 +91,11 @@ define('HCAPTCHA_SITE_KEY', env('HCAPTCHA_SITE_KEY'));
 define('HCAPTCHA_SECRET', env('HCAPTCHA_SECRET'));
 define('RETENTION_REJECTED_DAYS', env_int('RETENTION_REJECTED_DAYS', 7));
 define('RETENTION_TRASH_DAYS', env_int('RETENTION_TRASH_DAYS', 30));
+
+// Eventos e escala
+define('SCHEDULE_WEEKS_AHEAD', env_int('SCHEDULE_WEEKS_AHEAD', 8));
+define('SCHEDULE_OVERLOAD_PER_MONTH', env_int('SCHEDULE_OVERLOAD_PER_MONTH', 4));
+define('SCHEDULE_ROTATION_DAYS', env_int('SCHEDULE_ROTATION_DAYS', 60));
 
 // Caminho base das URLs (ex.: "/midia"). Vem do BASE_URL; se vazio, é deduzido do script.
 define('BASE_PATH', (static function (): string {

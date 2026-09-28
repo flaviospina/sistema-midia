@@ -219,6 +219,10 @@ final class UploadService
         }
 
         $guest = $isGuest ? GuestUpload::find((int) $session['guest_upload_id']) : null;
+        $event = null;
+        if (!$isGuest && ctype_digit((string) ($meta['event_id'] ?? ''))) {
+            $event = Database::one('SELECT id, title FROM events WHERE id = :id', ['id' => (int) $meta['event_id']]);
+        }
 
         $fileId = MediaFile::create([
             'folder_id'        => $folderId,
@@ -239,7 +243,8 @@ final class UploadService
             'description'      => mb_substr(trim((string) ($meta['description'] ?? ($guest['description'] ?? ''))), 0, 2000) ?: null,
             'visibility'       => $visibility,
             'status'           => $status,
-            'event_name'       => mb_substr(trim((string) ($meta['event'] ?? ($guest['event_name'] ?? ''))), 0, 150) ?: null,
+            'event_id'         => $event ? (int) $event['id'] : null,
+            'event_name'       => $event ? $event['title'] : (mb_substr(trim((string) ($meta['event'] ?? ($guest['event_name'] ?? ''))), 0, 150) ?: null),
             'uploaded_by'      => $session['user_id'] !== null ? (int) $session['user_id'] : null,
             'guest_upload_id'  => $session['guest_upload_id'] !== null ? (int) $session['guest_upload_id'] : null,
             'upload_ip'        => client_ip(),

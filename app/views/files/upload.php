@@ -21,7 +21,10 @@
           </div>
         <?php endif; ?>
         <div class="mb-2"><label class="form-label small" for="title">Título (opcional, vale para todos)</label><input type="text" name="title" id="title" class="form-control form-control-sm" maxlength="200"></div>
-        <div class="mb-2"><label class="form-label small" for="event">Evento</label><input type="text" name="event" id="event" class="form-control form-control-sm" maxlength="150" placeholder="Ex.: Congresso de Jovens 2026"></div>
+        <div class="mb-2"><label class="form-label small" for="event_id">Evento</label>
+          <select name="event_id" id="event_id" class="form-select form-select-sm"><option value="">— nenhum —</option>
+            <?php foreach ($events as $ev): ?><option value="<?= (int) $ev['id'] ?>"<?= selected($ev['id'], $eventId) ?>><?= e(Event::label($ev)) ?></option><?php endforeach; ?>
+          </select></div>
         <div class="mb-2"><label class="form-label small" for="tags">Tags (separadas por vírgula)</label><input type="text" name="tags" id="tags" class="form-control form-control-sm" placeholder="culto, jovens, louvor"></div>
         <div class="mb-2">
           <label class="form-label small" for="category">Categoria</label>

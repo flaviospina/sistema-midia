@@ -30,6 +30,17 @@ final class DashboardController
                ORDER BY f.sort_order"
             );
         }
+        if (Auth::can('schedule.self')) {
+            $data['myAssignments'] = Assignment::forUser((int) $user['id'], 0, 30);
+            $data['mySwaps'] = array_filter(SwapRequest::forUser((int) $user['id']), static fn($s) => (int) $s['to_user_id'] === (int) $user['id'] && $s['status'] === 'aguardando_membro');
+        }
+        if (Auth::can('schedule.manage')) {
+            $data['openSlots'] = array_filter(Assignment::openSlotsSummary(14), static fn($o) => (int) $o['slots_total'] > (int) $o['assigned_total'] || (int) $o['declined_total'] > 0);
+            $data['pendingSwaps'] = count(SwapRequest::pendingForCoordinator());
+        }
+        if (Auth::can('events.view')) {
+            $data['upcoming'] = Event::upcoming(7, 6);
+        }
         if (Auth::can('files.moderate')) {
             $data['quarantine'] = MediaFile::countQuarantine();
         }

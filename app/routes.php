@@ -132,4 +132,54 @@ $r->post('/enviar', [GuestController::class, 'start'], ['auth' => false]);
 $r->get('/enviar/arquivos', [GuestController::class, 'files'], ['auth' => false]);
 $r->get('/enviar/concluido', [GuestController::class, 'done'], ['auth' => false]);
 
+// ---------------------------------------------------------------------
+// Eventos e escala (Fase 3)
+// ---------------------------------------------------------------------
+$r->get('/eventos', [EventController::class, 'index'], ['perm' => 'events.view']);
+$r->get('/eventos/novo', [EventController::class, 'create'], ['perm' => 'events.manage']);
+$r->post('/eventos', [EventController::class, 'store'], ['perm' => 'events.manage']);
+$r->get('/eventos/{id}', [EventController::class, 'show'], ['perm' => 'events.view']);
+$r->get('/eventos/{id}/editar', [EventController::class, 'edit'], ['perm' => 'events.manage']);
+$r->post('/eventos/{id}', [EventController::class, 'update'], ['perm' => 'events.manage']);
+$r->post('/eventos/{id}/cancelar', [EventController::class, 'cancel'], ['perm' => 'events.manage']);
+$r->post('/eventos/{id}/reativar', [EventController::class, 'reactivate'], ['perm' => 'events.manage']);
+$r->post('/eventos/{id}/excluir', [EventController::class, 'delete'], ['perm' => 'events.manage']);
+
+$r->get('/eventos/{id}/escala', [ScheduleController::class, 'edit'], ['perm' => 'schedule.manage']);
+$r->post('/eventos/{id}/escala/vagas', [ScheduleController::class, 'slots'], ['perm' => 'events.manage']);
+$r->post('/eventos/{id}/escala/modelo', [ScheduleController::class, 'template'], ['perm' => 'events.manage']);
+$r->post('/eventos/{id}/escala/escalar', [ScheduleController::class, 'assign'], ['perm' => 'schedule.manage']);
+$r->post('/eventos/{id}/escala/sugerir', [ScheduleController::class, 'applySuggestion'], ['perm' => 'schedule.manage']);
+$r->post('/escalas/{id}/remover', [ScheduleController::class, 'remove'], ['perm' => 'schedule.manage']);
+$r->get('/escala/painel', [ScheduleController::class, 'dashboard'], ['perm' => 'schedule.manage']);
+$r->get('/trocas', [ScheduleController::class, 'swaps'], ['perm' => 'schedule.manage']);
+$r->post('/trocas/{id}/aprovar', [ScheduleController::class, 'approveSwap'], ['perm' => 'schedule.manage']);
+$r->post('/trocas/{id}/rejeitar', [ScheduleController::class, 'rejectSwap'], ['perm' => 'schedule.manage']);
+
+$r->get('/minha-escala', [MyScheduleController::class, 'index'], ['perm' => 'schedule.self']);
+$r->post('/escalas/{id}/responder', [MyScheduleController::class, 'respond'], ['perm' => 'schedule.self']);
+$r->post('/escalas/{id}/troca', [MyScheduleController::class, 'requestSwap'], ['perm' => 'schedule.self']);
+$r->post('/trocas/{id}/aceitar', [MyScheduleController::class, 'acceptSwap'], ['perm' => 'schedule.self']);
+$r->post('/trocas/{id}/recusar', [MyScheduleController::class, 'declineSwap'], ['perm' => 'schedule.self']);
+$r->post('/trocas/{id}/cancelar', [MyScheduleController::class, 'cancelSwap'], ['perm' => 'schedule.self']);
+$r->post('/minha-escala/ics/renovar', [MyScheduleController::class, 'regenerateIcs'], ['perm' => 'schedule.self']);
+$r->get('/calendario/{token}.ics', [MyScheduleController::class, 'ics'], ['auth' => false]);
+
+$r->get('/indisponibilidades', [UnavailabilityController::class, 'index'], ['perm' => 'schedule.self']);
+$r->post('/indisponibilidades', [UnavailabilityController::class, 'store'], ['perm' => 'schedule.self']);
+$r->post('/indisponibilidades/{id}/excluir', [UnavailabilityController::class, 'delete'], ['perm' => 'schedule.self']);
+$r->get('/indisponibilidades/equipe', [UnavailabilityController::class, 'team'], ['perm' => 'unavailability.view']);
+
+$r->get('/recorrencias', [RecurrenceController::class, 'index'], ['perm' => 'events.manage']);
+$r->get('/recorrencias/nova', [RecurrenceController::class, 'create'], ['perm' => 'events.manage']);
+$r->post('/recorrencias', [RecurrenceController::class, 'store'], ['perm' => 'events.manage']);
+$r->post('/recorrencias/gerar', [RecurrenceController::class, 'generate'], ['perm' => 'events.manage']);
+$r->get('/recorrencias/{id}/editar', [RecurrenceController::class, 'edit'], ['perm' => 'events.manage']);
+$r->post('/recorrencias/{id}', [RecurrenceController::class, 'update'], ['perm' => 'events.manage']);
+$r->get('/modelos', [RecurrenceController::class, 'templates'], ['perm' => 'events.manage']);
+$r->get('/modelos/novo', [RecurrenceController::class, 'templateCreate'], ['perm' => 'events.manage']);
+$r->post('/modelos', [RecurrenceController::class, 'templateStore'], ['perm' => 'events.manage']);
+$r->get('/modelos/{id}/editar', [RecurrenceController::class, 'templateEdit'], ['perm' => 'events.manage']);
+$r->post('/modelos/{id}', [RecurrenceController::class, 'templateUpdate'], ['perm' => 'events.manage']);
+
 return $r;

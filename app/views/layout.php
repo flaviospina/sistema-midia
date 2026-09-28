@@ -24,6 +24,12 @@
     <div class="collapse navbar-collapse" id="menu">
       <ul class="navbar-nav me-auto">
         <li class="nav-item"><a class="nav-link" href="<?= url('/') ?>"><i class="bi bi-house"></i> Início</a></li>
+        <?php if (Auth::can('events.view')): ?>
+          <li class="nav-item"><a class="nav-link" href="<?= url('/eventos') ?>"><i class="bi bi-calendar3"></i> Eventos</a></li>
+        <?php endif; ?>
+        <?php if (Auth::can('schedule.self')): $pn = count(Assignment::pendingForUser((int) $me['id'])); ?>
+          <li class="nav-item"><a class="nav-link" href="<?= url('/minha-escala') ?>"><i class="bi bi-person-check"></i> Minha escala<?= $pn ? ' <span class="badge text-bg-warning">' . $pn . '</span>' : '' ?></a></li>
+        <?php endif; ?>
         <?php if (Auth::can('files.browse')): ?>
           <li class="nav-item"><a class="nav-link" href="<?= url('/arquivos') ?>"><i class="bi bi-hdd-stack"></i> Arquivos</a></li>
         <?php endif; ?>
@@ -40,6 +46,12 @@
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-gear"></i> Administração</a>
             <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="<?= url('/escala/painel') ?>">Painel da escala</a></li>
+              <li><a class="dropdown-item" href="<?= url('/recorrencias') ?>">Cultos fixos</a></li>
+              <li><a class="dropdown-item" href="<?= url('/modelos') ?>">Modelos de escala</a></li>
+              <li><a class="dropdown-item" href="<?= url('/trocas') ?>">Pedidos de troca</a></li>
+              <li><a class="dropdown-item" href="<?= url('/indisponibilidades/equipe') ?>">Indisponibilidades da equipe</a></li>
+              <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item" href="<?= url('/restricoes') ?>">Restrições de imagem</a></li>
               <li><a class="dropdown-item" href="<?= url('/compartilhamentos') ?>">Links de compartilhamento</a></li>
               <li><a class="dropdown-item" href="<?= url('/armazenamento') ?>">Armazenamento</a></li>
@@ -55,6 +67,12 @@
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-gear"></i> Coordenação</a>
             <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="<?= url('/escala/painel') ?>">Painel da escala</a></li>
+              <li><a class="dropdown-item" href="<?= url('/recorrencias') ?>">Cultos fixos</a></li>
+              <li><a class="dropdown-item" href="<?= url('/modelos') ?>">Modelos de escala</a></li>
+              <li><a class="dropdown-item" href="<?= url('/trocas') ?>">Pedidos de troca</a></li>
+              <li><a class="dropdown-item" href="<?= url('/indisponibilidades/equipe') ?>">Indisponibilidades da equipe</a></li>
+              <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item" href="<?= url('/usuarios/pendentes') ?>">Cadastros pendentes</a></li>
               <li><a class="dropdown-item" href="<?= url('/restricoes') ?>">Restrições de imagem</a></li>
               <li><a class="dropdown-item" href="<?= url('/compartilhamentos') ?>">Links de compartilhamento</a></li>
