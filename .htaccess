@@ -1,0 +1,13 @@
+# =====================================================================
+# Usado APENAS na instalação "tudo dentro de public_html/midia" (opção B do LEIA-ME).
+# Bloqueia as pastas internas e encaminha o restante para /public.
+# =====================================================================
+Options -Indexes
+RewriteEngine On
+
+RewriteRule ^(app|storage|sql|cron)(/|$) - [F,L]
+RewriteRule (^|/)\.(env|git) - [F,L]
+RewriteRule \.(md|sql|log|example)$ - [F,L]
+
+RewriteCond %{REQUEST_URI} !/public/
+RewriteRule ^(.*)$ public/$1 [L]

@@ -173,11 +173,11 @@ Frequência, recusas, sobrecarga, pedidos atrasados, ministérios que mais deman
 
 ## 8. Decisões pendentes (perguntar ao Flávio antes da fase correspondente)
 
-1. URL final (`admoema.com.br/midia`?) e se o login será compartilhado com `/pix` e `/biblio` no futuro.
+1. ~~URL final e login compartilhado~~ **Decidido (Fase 1):** `admoema.com.br/midia`; tabela `users` + `user_roles(app_code)` e cookie `ADMOEMA_SID` com path `/`, prontos para SSO com `/pix` e `/biblio`.
 2. Arquivos pesados (vídeos, acervo de anos): ficar só no HostGator ou migrar os aprovados para um Google Drive da igreja via n8n? (Envolve imagens de membros em serviço externo: exige aprovação explícita.)
 3. Limites: tamanho máximo por arquivo e cota por perfil.
 4. Quais tipos de arte exigem aprovação pastoral.
-5. Se `membro_igreja` terá login ou apenas a página pública `/enviar`.
+5. ~~Se `membro_igreja` terá login~~ **Decidido (Fase 1):** tem login; autocadastro em `/cadastro` com aprovação pela mídia.
 
 ## 9. Checklist de segurança (toda fase)
 PDO com prepared statements · `htmlspecialchars()` em toda saída · `password_hash()` · `session_regenerate_id(true)` no login · CSRF em todo POST · `.env`, `app/` e `storage/` inacessíveis pela web · uploads renomeados e validados · logs de ação · exclusão/anonimização de dados pessoais a pedido do titular.

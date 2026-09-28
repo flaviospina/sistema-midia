@@ -1,0 +1,7 @@
+.env
+storage/**/*
+!storage/**/
+!storage/.htaccess
+!storage/**/.gitkeep
+*.log
+.DS_Store
