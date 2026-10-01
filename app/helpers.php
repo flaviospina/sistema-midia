@@ -30,7 +30,9 @@ function absolute_url(string $path = '/', array $query = []): string
 
 function asset(string $path): string
 {
-    return url('assets/' . ltrim($path, '/')) . '?v=' . APP_VERSION;
+    $file = APP_ROOT . '/public/assets/' . ltrim($path, '/');
+    $version = is_file($file) ? (string) filemtime($file) : APP_VERSION;
+    return url('assets/' . ltrim($path, '/')) . '?v=' . $version;
 }
 
 function redirect(string $path, array $query = []): never

@@ -89,12 +89,12 @@ $subItem = static fn(string $path, string $label): string => '<li><a class="nav-
     ?>
       <div class="menu-lateral__titulo"><?= $isAdmin ? 'Administração' : 'Coordenação' ?></div>
       <ul class="nav flex-column">
-        <?php foreach ($groups as [$key, $icon, $label, $items]): $open = (bool) array_filter($items, static fn($i) => $isActive($i[0])); ?>
+        <?php foreach ($groups as [$key, $icon, $label, $items]): $temAtivo = (bool) array_filter($items, static fn($i) => $isActive($i[0])); ?>
           <li class="nav-item">
-            <a class="nav-link grupo<?= $open ? '' : ' collapsed' ?>" data-bs-toggle="collapse" href="#grupo-<?= $key ?>" role="button" aria-expanded="<?= $open ? 'true' : 'false' ?>" aria-controls="grupo-<?= $key ?>"><i class="bi <?= $icon ?>"></i><span><?= e($label) ?></span><i class="bi bi-chevron-down seta ms-auto"></i></a>
-            <ul class="nav flex-column collapse<?= $open ? ' show' : '' ?>" id="grupo-<?= $key ?>">
+            <a class="nav-link grupo<?= $temAtivo ? ' pai-ativo' : '' ?>" href="#grupo-<?= $key ?>" role="button" data-submenu aria-expanded="false" aria-controls="grupo-<?= $key ?>"><i class="bi <?= $icon ?>"></i><span><?= e($label) ?></span><i class="bi bi-chevron-down seta ms-auto"></i></a>
+            <div class="submenu" id="grupo-<?= $key ?>"><ul class="nav flex-column">
               <?php foreach ($items as [$p, $l]) echo $subItem($p, $l); ?>
-            </ul>
+            </ul></div>
           </li>
         <?php endforeach; ?>
       </ul>

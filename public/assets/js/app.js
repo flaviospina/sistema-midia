@@ -201,3 +201,24 @@
     });
   });
 })();
+
+// Menu lateral: submenus recolhidos por padrão; abre com animação ao clicar e fecha os demais (acordeão)
+(function () {
+  'use strict';
+  var toggles = document.querySelectorAll('.menu-lateral [data-submenu]');
+  if (!toggles.length) return;
+  function setOpen(link, open) {
+    var panel = document.getElementById(link.getAttribute('aria-controls'));
+    if (!panel) return;
+    link.setAttribute('aria-expanded', open ? 'true' : 'false');
+    panel.classList.toggle('aberto', open);
+  }
+  toggles.forEach(function (link) {
+    link.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      var willOpen = link.getAttribute('aria-expanded') !== 'true';
+      toggles.forEach(function (other) { if (other !== link) setOpen(other, false); });
+      setOpen(link, willOpen);
+    });
+  });
+})();
