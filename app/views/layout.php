@@ -1,4 +1,15 @@
-<?php /** @var string $content */ $me = Auth::user(); ?>
+<?php
+/** @var string $content */
+$me = Auth::user();
+// Caminho atual (sem a subpasta de publicação) para marcar o item ativo do menu
+$currentPath = '/' . trim(substr((string) parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), strlen(BASE_PATH)), '/');
+$isActive = static fn(string $path): bool => $path === '/' ? $currentPath === '/' : ($currentPath === $path || str_starts_with($currentPath, $path . '/'));
+$navItem = static function (string $path, string $icon, string $label, int $badge = 0) use ($isActive): string {
+    return '<li class="nav-item"><a class="nav-link' . ($isActive($path) ? ' active" aria-current="page' : '') . '" href="' . url($path) . '"><i class="bi ' . $icon . '"></i><span>' . e($label) . '</span>'
+        . ($badge ? '<span class="badge text-bg-warning ms-auto">' . $badge . '</span>' : '') . '</a></li>';
+};
+$subItem = static fn(string $path, string $label): string => '<li><a class="nav-link sub' . ($isActive($path) ? ' active" aria-current="page' : '') . '" href="' . url($path) . '">' . e($label) . '</a></li>';
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -14,146 +25,107 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <link href="<?= asset('css/app.css') ?>" rel="stylesheet">
 </head>
-<body>
+<body class="<?= $me ? 'com-menu' : '' ?>">
 <?php if ($me): ?>
-<nav class="navbar navbar-expand-lg navbar-dark topo sticky-top">
-  <div class="container-fluid">
-    <a class="navbar-brand marca d-flex align-items-center gap-2" href="<?= url('/') ?>">
-      <span class="marca__logo"><i class="bi bi-camera-reels"></i></span> <span>Central de <strong>Mídia</strong></span>
+<!-- Barra superior: só no celular/tablet (abre o menu lateral) -->
+<header class="topo topo--mobile d-lg-none d-flex align-items-center gap-2 px-3 sticky-top">
+  <button class="btn btn-link text-white p-1 fs-4 lh-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#menu" aria-controls="menu" aria-label="Abrir menu"><i class="bi bi-list"></i></button>
+  <a class="navbar-brand marca d-flex align-items-center gap-2 me-auto" href="<?= url('/') ?>">
+    <span class="marca__logo"><i class="bi bi-camera-reels"></i></span> <span>Central de <strong>Mídia</strong></span>
+  </a>
+  <a href="<?= url('/meus-dados') ?>" class="d-flex" aria-label="Meus dados"><?php partial('avatar', ['u' => $me, 'size' => 28]) ?></a>
+</header>
+
+<!-- Menu lateral: fixo no desktop, gaveta (offcanvas) no celular -->
+<nav class="menu-lateral offcanvas-lg offcanvas-start" tabindex="-1" id="menu" aria-label="Menu principal">
+  <div class="menu-lateral__topo">
+    <a class="marca d-flex align-items-center gap-2" href="<?= url('/') ?>">
+      <span class="marca__logo"><i class="bi bi-camera-reels"></i></span>
+      <span class="marca__texto">Central de <strong>Mídia</strong><small>ADMoema</small></span>
     </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu" aria-label="Menu">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="menu">
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item"><a class="nav-link" href="<?= url('/') ?>"><i class="bi bi-house"></i> Início</a></li>
-        <?php if (Auth::can('events.view')): ?>
-          <li class="nav-item"><a class="nav-link" href="<?= url('/eventos') ?>"><i class="bi bi-calendar3"></i> Eventos</a></li>
-        <?php endif; ?>
-        <?php if (Auth::can('schedule.self')): $pn = count(Assignment::pendingForUser((int) $me['id'])); ?>
-          <li class="nav-item"><a class="nav-link" href="<?= url('/minha-escala') ?>"><i class="bi bi-person-check"></i> Minha escala<?= $pn ? ' <span class="badge text-bg-warning">' . $pn . '</span>' : '' ?></a></li>
-        <?php endif; ?>
-        <?php if (Auth::can('files.browse')): ?>
-          <li class="nav-item"><a class="nav-link" href="<?= url('/arquivos') ?>"><i class="bi bi-hdd-stack"></i> Arquivos</a></li>
-        <?php endif; ?>
-        <?php if (Auth::can('art.request')): $ac = ArtRequest::countsForDashboard(); $an = $ac['minha_revisao'] + (Auth::can('art.approve_pastoral') && !Auth::is('admin') ? $ac['aprov_pastoral'] : 0) + (Auth::can('art.approve_media') ? $ac['aprov_midia'] : 0); ?>
-          <li class="nav-item"><a class="nav-link" href="<?= url('/artes') ?>"><i class="bi bi-brush"></i> Artes<?= $an ? ' <span class="badge text-bg-warning">' . $an . '</span>' : '' ?></a></li>
-        <?php endif; ?>
-        <?php if (Auth::can('publications.view')): ?>
-          <li class="nav-item"><a class="nav-link" href="<?= url('/comunicacao') ?>"><i class="bi bi-megaphone"></i> Comunicação</a></li>
-        <?php endif; ?>
-        <?php if (Auth::can('equipment.view') || Auth::can('training.view')): ?>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-tools"></i> Equipe</a>
-            <ul class="dropdown-menu">
-              <?php if (Auth::can('equipment.view')): ?><li><a class="dropdown-item" href="<?= url('/patrimonio') ?>"><i class="bi bi-box-seam"></i> Patrimônio</a></li><?php endif; ?>
-              <?php if (Auth::can('incidents.report')): ?><li><a class="dropdown-item" href="<?= url('/ocorrencias') ?>"><i class="bi bi-exclamation-triangle"></i> Ocorrências</a></li><?php endif; ?>
-              <?php if (Auth::can('training.view')): ?><li><a class="dropdown-item" href="<?= url('/capacitacao') ?>"><i class="bi bi-mortarboard"></i> Capacitação</a></li><?php endif; ?>
-              <?php if (Auth::can('leader.dashboard')): ?><li><hr class="dropdown-divider"></li><li><a class="dropdown-item" href="<?= url('/painel-lider') ?>"><i class="bi bi-speedometer2"></i> Painel do líder</a></li><?php endif; ?>
-            </ul>
-          </li>
-        <?php elseif (Auth::can('leader.dashboard')): ?>
-          <li class="nav-item"><a class="nav-link" href="<?= url('/painel-lider') ?>"><i class="bi bi-speedometer2"></i> Painel</a></li>
-        <?php endif; ?>
-        <?php if (Auth::can('files.moderate')): $qn = MediaFile::countQuarantine(); ?>
-          <li class="nav-item"><a class="nav-link" href="<?= url('/moderacao') ?>"><i class="bi bi-shield-check"></i> Quarentena<?= $qn ? ' <span class="badge text-bg-warning">' . $qn . '</span>' : '' ?></a></li>
-        <?php endif; ?>
-        <?php if (Auth::can('users.view')): ?>
-          <li class="nav-item"><a class="nav-link" href="<?= url('/usuarios') ?>"><i class="bi bi-people"></i> Pessoas</a></li>
-        <?php endif; ?>
-        <?php if (Auth::can('ministries.view')): ?>
-          <li class="nav-item"><a class="nav-link" href="<?= url('/ministerios') ?>"><i class="bi bi-diagram-3"></i> Ministérios</a></li>
-        <?php endif; ?>
-        <?php if (Auth::is('admin')): ?>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-gear"></i> Administração</a>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="<?= url('/artes/atrasos') ?>">Artes: atrasos e prazos</a></li>
-              <li><a class="dropdown-item" href="<?= url('/artes/checklist') ?>">Artes: checklist de identidade</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="<?= url('/escala/painel') ?>">Painel da escala</a></li>
-              <li><a class="dropdown-item" href="<?= url('/recorrencias') ?>">Cultos fixos</a></li>
-              <li><a class="dropdown-item" href="<?= url('/modelos') ?>">Modelos de escala</a></li>
-              <li><a class="dropdown-item" href="<?= url('/trocas') ?>">Pedidos de troca</a></li>
-              <li><a class="dropdown-item" href="<?= url('/indisponibilidades/equipe') ?>">Indisponibilidades da equipe</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="<?= url('/checklist') ?>">Checklist pré-culto (itens)</a></li>
-              <li><a class="dropdown-item" href="<?= url('/capacitacao/trilhas') ?>">Trilhas de capacitação</a></li>
-              <li><a class="dropdown-item" href="<?= url('/capacitacao/equipe') ?>">Capacitação da equipe</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="<?= url('/restricoes') ?>">Restrições de imagem</a></li>
-              <li><a class="dropdown-item" href="<?= url('/compartilhamentos') ?>">Links de compartilhamento</a></li>
-              <li><a class="dropdown-item" href="<?= url('/armazenamento') ?>">Armazenamento</a></li>
-              <li><a class="dropdown-item" href="<?= url('/arquivos/lixeira') ?>">Lixeira</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="<?= url('/funcoes') ?>">Funções da equipe</a></li>
-              <li><a class="dropdown-item" href="<?= url('/usuarios/pendentes') ?>">Cadastros pendentes</a></li>
-              <li><a class="dropdown-item" href="<?= url('/integracoes') ?>">Integrações (n8n / WhatsApp)</a></li>
-              <li><a class="dropdown-item" href="<?= url('/privacidade') ?>">Privacidade (LGPD)</a></li>
-              <li><a class="dropdown-item" href="<?= url('/auditoria') ?>">Auditoria</a></li>
-            </ul>
-          </li>
-        <?php elseif (Auth::can('users.approve')): ?>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-gear"></i> Coordenação</a>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="<?= url('/artes/atrasos') ?>">Artes: atrasos e prazos</a></li>
-              <li><a class="dropdown-item" href="<?= url('/artes/checklist') ?>">Artes: checklist de identidade</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="<?= url('/escala/painel') ?>">Painel da escala</a></li>
-              <li><a class="dropdown-item" href="<?= url('/recorrencias') ?>">Cultos fixos</a></li>
-              <li><a class="dropdown-item" href="<?= url('/modelos') ?>">Modelos de escala</a></li>
-              <li><a class="dropdown-item" href="<?= url('/trocas') ?>">Pedidos de troca</a></li>
-              <li><a class="dropdown-item" href="<?= url('/indisponibilidades/equipe') ?>">Indisponibilidades da equipe</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="<?= url('/checklist') ?>">Checklist pré-culto (itens)</a></li>
-              <li><a class="dropdown-item" href="<?= url('/capacitacao/trilhas') ?>">Trilhas de capacitação</a></li>
-              <li><a class="dropdown-item" href="<?= url('/capacitacao/equipe') ?>">Capacitação da equipe</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="<?= url('/usuarios/pendentes') ?>">Cadastros pendentes</a></li>
-              <li><a class="dropdown-item" href="<?= url('/restricoes') ?>">Restrições de imagem</a></li>
-              <li><a class="dropdown-item" href="<?= url('/compartilhamentos') ?>">Links de compartilhamento</a></li>
-              <li><a class="dropdown-item" href="<?= url('/armazenamento') ?>">Armazenamento</a></li>
-              <li><a class="dropdown-item" href="<?= url('/arquivos/lixeira') ?>">Lixeira</a></li>
-            </ul>
-          </li>
-        <?php elseif (Auth::can('restrictions.view')): ?>
-          <li class="nav-item"><a class="nav-link" href="<?= url('/restricoes') ?>"><i class="bi bi-eye-slash"></i> Restrições</a></li>
-        <?php endif; ?>
+    <button type="button" class="btn-close btn-close-white d-lg-none" data-bs-dismiss="offcanvas" data-bs-target="#menu" aria-label="Fechar"></button>
+  </div>
+
+  <div class="menu-lateral__corpo">
+    <ul class="nav flex-column">
+      <?= $navItem('/', 'bi-house', 'Início') ?>
+      <?php if (Auth::can('events.view')) echo $navItem('/eventos', 'bi-calendar3', 'Eventos'); ?>
+      <?php if (Auth::can('schedule.self')) echo $navItem('/minha-escala', 'bi-person-check', 'Minha escala', count(Assignment::pendingForUser((int) $me['id']))); ?>
+      <?php if (Auth::can('schedule.self')) echo $navItem('/indisponibilidades', 'bi-calendar-x', 'Indisponibilidades'); ?>
+      <?php if (Auth::can('files.browse')) echo $navItem('/arquivos', 'bi-hdd-stack', 'Arquivos'); ?>
+      <?php if (Auth::can('art.request')): $ac = ArtRequest::countsForDashboard(); $an = $ac['minha_revisao'] + (Auth::can('art.approve_pastoral') && !Auth::is('admin') ? $ac['aprov_pastoral'] : 0) + (Auth::can('art.approve_media') ? $ac['aprov_midia'] : 0); echo $navItem('/artes', 'bi-brush', 'Artes', $an); endif; ?>
+      <?php if (Auth::can('publications.view')) echo $navItem('/comunicacao', 'bi-megaphone', 'Comunicação'); ?>
+      <?php if (Auth::can('files.moderate')) echo $navItem('/moderacao', 'bi-shield-check', 'Quarentena', MediaFile::countQuarantine()); ?>
+    </ul>
+
+    <?php if (Auth::can('equipment.view') || Auth::can('training.view') || Auth::can('incidents.report') || Auth::can('leader.dashboard')): ?>
+      <div class="menu-lateral__titulo">Equipe</div>
+      <ul class="nav flex-column">
+        <?php if (Auth::can('equipment.view')) echo $navItem('/patrimonio', 'bi-box-seam', 'Patrimônio'); ?>
+        <?php if (Auth::can('incidents.report')) echo $navItem('/ocorrencias', 'bi-exclamation-triangle', 'Ocorrências'); ?>
+        <?php if (Auth::can('training.view')) echo $navItem('/capacitacao', 'bi-mortarboard', 'Capacitação'); ?>
+        <?php if (Auth::can('leader.dashboard')) echo $navItem('/painel-lider', 'bi-speedometer2', 'Painel do líder'); ?>
       </ul>
-      <ul class="navbar-nav">
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
-            <?php partial('avatar', ['u' => $me, 'size' => 28]) ?>
-            <span><?= e(explode(' ', $me['name'])[0]) ?></span>
-          </a>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li><span class="dropdown-item-text small text-muted"><?= e(Auth::roleLabel($me['role'])) ?></span></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="<?= url('/meus-dados') ?>"><i class="bi bi-person-badge"></i> Meus dados</a></li>
-            <li><a class="dropdown-item" href="<?= url('/trocar-senha') ?>"><i class="bi bi-key"></i> Trocar senha</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li>
-              <form method="post" action="<?= url('/sair') ?>"><?= Csrf::field() ?>
-                <button class="dropdown-item"><i class="bi bi-box-arrow-right"></i> Sair</button>
-              </form>
-            </li>
-          </ul>
-        </li>
+    <?php endif; ?>
+
+    <?php if (Auth::can('users.view') || Auth::can('ministries.view') || Auth::can('restrictions.view')): ?>
+      <div class="menu-lateral__titulo">Cadastros</div>
+      <ul class="nav flex-column">
+        <?php if (Auth::can('users.view')) echo $navItem('/usuarios', 'bi-people', 'Pessoas'); ?>
+        <?php if (Auth::can('ministries.view')) echo $navItem('/ministerios', 'bi-diagram-3', 'Ministérios'); ?>
+        <?php if (Auth::can('restrictions.view')) echo $navItem('/restricoes', 'bi-eye-slash', 'Restrições de imagem'); ?>
       </ul>
+    <?php endif; ?>
+
+    <?php if (Auth::is('admin') || Auth::can('users.approve')): $isAdmin = Auth::is('admin');
+      $groups = [
+        ['escala', 'bi-calendar-week', 'Escala', [['/escala/painel', 'Painel da escala'], ['/recorrencias', 'Cultos fixos'], ['/modelos', 'Modelos de escala'], ['/trocas', 'Pedidos de troca'], ['/indisponibilidades/equipe', 'Indisponibilidades da equipe'], ['/checklist', 'Checklist pré-culto (itens)']]],
+        ['artes', 'bi-palette', 'Artes', [['/artes/atrasos', 'Atrasos e prazos'], ['/artes/checklist', 'Checklist de identidade']]],
+        ['capacitacao', 'bi-mortarboard', 'Capacitação', [['/capacitacao/trilhas', 'Trilhas de capacitação'], ['/capacitacao/equipe', 'Capacitação da equipe']]],
+        ['repositorio', 'bi-folder2-open', 'Repositório', [['/compartilhamentos', 'Links de compartilhamento'], ['/armazenamento', 'Armazenamento'], ['/arquivos/lixeira', 'Lixeira']]],
+        ['pessoas', 'bi-person-gear', 'Pessoas', array_merge([['/usuarios/pendentes', 'Cadastros pendentes']], $isAdmin ? [['/funcoes', 'Funções da equipe'], ['/privacidade', 'Privacidade (LGPD)']] : [])],
+      ];
+      if ($isAdmin) { $groups[] = ['sistema', 'bi-gear', 'Sistema', [['/integracoes', 'Integrações (n8n / WhatsApp)'], ['/auditoria', 'Auditoria']]]; }
+    ?>
+      <div class="menu-lateral__titulo"><?= $isAdmin ? 'Administração' : 'Coordenação' ?></div>
+      <ul class="nav flex-column">
+        <?php foreach ($groups as [$key, $icon, $label, $items]): $open = (bool) array_filter($items, static fn($i) => $isActive($i[0])); ?>
+          <li class="nav-item">
+            <a class="nav-link grupo<?= $open ? '' : ' collapsed' ?>" data-bs-toggle="collapse" href="#grupo-<?= $key ?>" role="button" aria-expanded="<?= $open ? 'true' : 'false' ?>" aria-controls="grupo-<?= $key ?>"><i class="bi <?= $icon ?>"></i><span><?= e($label) ?></span><i class="bi bi-chevron-down seta ms-auto"></i></a>
+            <ul class="nav flex-column collapse<?= $open ? ' show' : '' ?>" id="grupo-<?= $key ?>">
+              <?php foreach ($items as [$p, $l]) echo $subItem($p, $l); ?>
+            </ul>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+    <?php endif; ?>
+  </div>
+
+  <div class="menu-lateral__rodape">
+    <a href="<?= url('/meus-dados') ?>" class="usuario d-flex align-items-center gap-2">
+      <?php partial('avatar', ['u' => $me, 'size' => 40]) ?>
+      <span class="min-w-0"><strong class="d-block text-truncate"><?= e($me['name']) ?></strong><small><?= e(Auth::roleLabel($me['role'])) ?></small></span>
+    </a>
+    <div class="d-flex gap-1 mt-2">
+      <a href="<?= url('/meus-dados') ?>" class="btn btn-sm btn-outline-light flex-fill" title="Meus dados"><i class="bi bi-person-badge"></i> Dados</a>
+      <a href="<?= url('/trocar-senha') ?>" class="btn btn-sm btn-outline-light flex-fill" title="Trocar senha"><i class="bi bi-key"></i> Senha</a>
+      <form method="post" action="<?= url('/sair') ?>" class="flex-fill"><?= Csrf::field() ?>
+        <button class="btn btn-sm btn-outline-light w-100" title="Sair"><i class="bi bi-box-arrow-right"></i> Sair</button>
+      </form>
     </div>
   </div>
 </nav>
 <?php endif; ?>
 
-<main class="container-fluid container-xl py-3 py-md-4">
-  <?php partial('flashes') ?>
-  <?= $content ?>
-</main>
-
-<footer class="text-center text-muted small py-3">
-  <?= e(APP_NAME) ?> · v<?= e(APP_VERSION) ?> · <a href="<?= url('/termo-de-uso') ?>" class="text-muted">Termo de uso e privacidade</a>
-</footer>
+<div class="conteudo">
+  <main class="container-fluid container-xl py-3 py-md-4">
+    <?php partial('flashes') ?>
+    <?= $content ?>
+  </main>
+  <footer class="text-center text-muted small py-3">
+    <?= e(APP_NAME) ?> · v<?= e(APP_VERSION) ?> · <a href="<?= url('/termo-de-uso') ?>" class="text-muted">Termo de uso e privacidade</a>
+  </footer>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="<?= asset('js/app.js') ?>"></script>
