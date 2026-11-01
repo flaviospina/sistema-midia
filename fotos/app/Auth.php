@@ -24,6 +24,7 @@ final class Auth
         'photos.edit'    => ['admin', 'fotografo', 'social', 'membro'],   // abrir o editor e baixar o resultado
         'photos.save_version' => ['admin', 'fotografo', 'social'],       // gravar a versão editada no álbum
         'social.share'   => ['admin', 'social'],
+        'links.create'   => ['admin', 'fotografo', 'social'],              // links públicos com pré-visualização
         'users.manage'   => ['admin'],
         'audit.view'     => ['admin'],
     ];

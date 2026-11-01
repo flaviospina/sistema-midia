@@ -9,6 +9,7 @@ require APP_ROOT . '/app/bootstrap.php';
 $uploads = Upload::purgeExpired();
 LoginCode::purge();
 PublicLink::purge();
+ShareLink::purge();
 Database::run('DELETE FROM rate_limit_hits WHERE hit_at < DATE_SUB(NOW(), INTERVAL 1 DAY)');
 Database::run('DELETE FROM password_resets WHERE expires_at < DATE_SUB(NOW(), INTERVAL 7 DAY)');
 // Arquivos temporários órfãos (ZIPs não apagados, pastas de envio sem registro)

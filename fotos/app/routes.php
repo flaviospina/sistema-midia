@@ -50,6 +50,14 @@ $r->post('/fotos/{id}/compartilhar', [SocialController::class, 'publish'], ['per
 // Link público temporário (a Meta baixa a imagem por aqui)
 $r->get('/p/{token}.jpg', [PhotoController::class, 'publicImage'], ['auth' => false]);
 
+// Links públicos de compartilhamento com pré-visualização (Open Graph) — sem login
+$r->post('/fotos/{id}/link', [ShareController::class, 'createForPhoto'], ['perm' => 'links.create']);
+$r->post('/albuns/{id}/link', [ShareController::class, 'createForAlbum'], ['perm' => 'links.create']);
+$r->post('/links/{id}/revogar', [ShareController::class, 'revoke'], ['perm' => 'links.create']);
+$r->get('/s/{token}', [ShareController::class, 'view'], ['auth' => false]);
+$r->get('/s/{token}/imagem', [ShareController::class, 'image'], ['auth' => false]);
+$r->get('/s/{token}/{id}/imagem', [ShareController::class, 'albumImage'], ['auth' => false]);
+
 // Conta
 $r->get('/meus-dados', [AccountController::class, 'index']);
 $r->post('/meus-dados', [AccountController::class, 'update']);

@@ -250,3 +250,24 @@ VALUES (1, 'Administrador', 'admin@admoema.com.br',
 
 INSERT IGNORE INTO user_roles (user_id, app_code, role)
 SELECT id, 'fotos', 'admin' FROM users WHERE email = 'admin@admoema.com.br';
+
+-- ---------------------------------------------------------------------
+-- Links públicos de compartilhamento (foto ou álbum) com pré-visualização para redes sociais (Open Graph)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS share_links (
+    id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    token      CHAR(22)     NOT NULL,
+    photo_id   INT UNSIGNED NULL,
+    album_id   INT UNSIGNED NULL,
+    expires_at DATETIME     NULL,                     -- NULL = sem validade
+    views      INT UNSIGNED NOT NULL DEFAULT 0,
+    revoked_at DATETIME     NULL,
+    created_by INT UNSIGNED NULL,
+    created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_share_links_token (token),
+    KEY idx_share_links_photo (photo_id),
+    KEY idx_share_links_album (album_id),
+    CONSTRAINT fk_share_links_photo FOREIGN KEY (photo_id) REFERENCES photos (id) ON DELETE CASCADE,
+    CONSTRAINT fk_share_links_album FOREIGN KEY (album_id) REFERENCES photo_albums (id) ON DELETE CASCADE,
+    CONSTRAINT fk_share_links_user FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

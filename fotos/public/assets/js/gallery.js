@@ -21,7 +21,7 @@
   var lb = document.getElementById('lightbox'), img = document.getElementById('lbImg'), cur = -1;
   var elName = document.getElementById('lbName'), elMeta = document.getElementById('lbMeta'), elCap = document.getElementById('lbCaption');
   var aEdit = document.getElementById('lbEdit'), aDl = document.getElementById('lbDownload'), aShare = document.getElementById('lbShare'), bNative = document.getElementById('lbShareNative');
-  var fDel = document.getElementById('lbDeleteForm'), fCover = document.getElementById('lbCoverForm');
+  var fDel = document.getElementById('lbDeleteForm'), fCover = document.getElementById('lbCoverForm'), fLink = document.getElementById('lbLinkForm');
   function show(i) {
     if (i < 0 || i >= cards.length) return;
     cur = i; var c = cards[i], d = c.dataset;
@@ -33,6 +33,7 @@
     bNative.classList.toggle('d-none', !(navigator.share && canDownload));
     if (fDel) { var may = canDelete || d.mine === '1'; fDel.classList.toggle('d-none', !may); fDel.action = d.delete; }
     if (fCover) { fCover.action = d.delete.replace(/\/excluir$/, '/capa'); }
+    if (fLink) { fLink.action = d.delete.replace(/\/excluir$/, '/link'); }
     lb.classList.remove('d-none'); document.body.style.overflow = 'hidden';
     history.replaceState(null, '', location.pathname + '?foto=' + d.id);
     // Pré-carrega a próxima
@@ -68,6 +69,12 @@
       return navigator.share(data);
     }).catch(function (e) { if (e && e.name !== 'AbortError') window.appDialog.alert(e.message || 'Não foi possível compartilhar.', { type: 'warning' }); })
       .then(function () { bNative.disabled = false; });
+  });
+
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-copy]');
+    if (!b || !navigator.clipboard) return;
+    navigator.clipboard.writeText(b.dataset.copy).then(function () { var old = b.innerHTML; b.innerHTML = '<i class="bi bi-check"></i> Copiado'; setTimeout(function () { b.innerHTML = old; }, 1500); });
   });
 
   // Abre direto uma foto indicada na URL (?foto=ID)

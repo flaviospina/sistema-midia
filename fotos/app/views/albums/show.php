@@ -7,6 +7,12 @@
   </div>
   <div class="d-flex gap-2 flex-wrap">
     <?php if (Auth::can('photos.upload')): ?><a href="<?= url('/albuns/' . $aid . '/enviar') ?>" class="btn btn-sm btn-primary"><i class="bi bi-cloud-arrow-up"></i> Enviar fotos</a><?php endif; ?>
+    <?php if (Auth::can('links.create')): ?>
+      <form method="post" action="<?= url('/albuns/' . $aid . '/link') ?>" class="d-flex gap-1" title="Cria um link público do álbum com pré-visualização para redes sociais"><?= Csrf::field() ?>
+        <select name="days" class="form-select form-select-sm w-auto" aria-label="Validade do link"><?php foreach (ShareLink::VALIDITY as $k => $l): ?><option value="<?= e($k) ?>"<?= selected($k, '30') ?>><?= e($l) ?></option><?php endforeach; ?></select>
+        <button class="btn btn-sm btn-outline-primary"><i class="bi bi-link-45deg"></i> Link público</button>
+      </form>
+    <?php endif; ?>
     <?php if ($zipOk && $photos && Auth::can('photos.download')): ?><form method="post" action="<?= url('/albuns/' . $aid . '/zip') ?>" id="zipForm"><?= Csrf::field() ?><button class="btn btn-sm btn-outline-secondary" id="zipBtn"><i class="bi bi-file-earmark-zip"></i> Baixar tudo (ZIP)</button></form><?php endif; ?>
     <?php if ($canManage): ?><a href="<?= url('/albuns/' . $aid . '/editar') ?>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
       <?php if (!$photos || Auth::is('admin')): ?><form method="post" action="<?= url('/albuns/' . $aid . '/excluir') ?>" data-confirm="Excluir esta pasta<?= $photos ? ' e TODAS as suas fotos' : '' ?>? Esta ação não pode ser desfeita." data-confirm-type="danger"><?= Csrf::field() ?><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form><?php endif; ?>
@@ -42,6 +48,19 @@
 <?php endif; ?>
 <?php endif; ?>
 
+<?php if (Auth::can('links.create') && ($links = ShareLink::forAlbum($aid))): ?>
+  <div class="card mt-4"><div class="card-header fw-semibold"><i class="bi bi-link-45deg"></i> Links públicos ativos</div>
+    <ul class="list-group list-group-flush small">
+      <?php foreach ($links as $lk): $u = absolute_url('/s/' . $lk['token']); ?>
+        <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <span class="min-w-0"><strong><?= $lk['photo_id'] ? 'Foto ' . e($lk['file_name']) : 'Álbum inteiro' ?></strong> · <?= (int) $lk['views'] ?> acesso(s) · <?= $lk['expires_at'] ? 'até ' . e(format_date($lk['expires_at'])) : 'sem validade' ?> · <?= e($lk['creator_name'] ?? '') ?><br><span class="share-url text-muted"><?= e($u) ?></span></span>
+          <span class="d-flex gap-1"><button type="button" class="btn btn-sm btn-outline-secondary" data-copy="<?= e($u) ?>"><i class="bi bi-clipboard"></i></button><a class="btn btn-sm btn-outline-secondary" href="<?= e($u) ?>" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i></a>
+          <form method="post" action="<?= url('/links/' . (int) $lk['id'] . '/revogar') ?>" data-confirm="Desativar este link? Quem o tiver deixa de conseguir abrir." data-confirm-type="danger"><?= Csrf::field() ?><button class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i></button></form></span>
+        </li>
+      <?php endforeach; ?>
+    </ul></div>
+<?php endif; ?>
+
 <!-- Visualizador -->
 <div class="lightbox d-none" id="lightbox" role="dialog" aria-modal="true" aria-label="Foto ampliada">
   <button type="button" class="lb-close" data-lb-close aria-label="Fechar"><i class="bi bi-x-lg"></i></button>
@@ -55,6 +74,7 @@
       <a class="btn btn-sm btn-light d-none" id="lbDownload" href="#" download><i class="bi bi-download"></i> Original</a>
       <button type="button" class="btn btn-sm btn-light d-none" id="lbShareNative"><i class="bi bi-share"></i> Compartilhar</button>
       <a class="btn btn-sm btn-light d-none" id="lbShare" href="#"><i class="bi bi-instagram"></i> Publicar</a>
+      <?php if (Auth::can('links.create')): ?><form method="post" id="lbLinkForm" class="d-inline"><?= Csrf::field() ?><input type="hidden" name="days" value="30"><button class="btn btn-sm btn-light" title="Link público com pré-visualização (30 dias)"><i class="bi bi-link-45deg"></i> Link</button></form><?php endif; ?>
       <?php if ($canManage): ?><form method="post" id="lbCoverForm" class="d-inline"><?= Csrf::field() ?><button class="btn btn-sm btn-light" title="Usar como capa"><i class="bi bi-star"></i></button></form><?php endif; ?>
       <form method="post" id="lbDeleteForm" class="d-inline d-none" data-confirm="Excluir esta foto do álbum?" data-confirm-type="danger"><?= Csrf::field() ?><button class="btn btn-sm btn-outline-light" title="Excluir"><i class="bi bi-trash"></i></button></form>
     </div>

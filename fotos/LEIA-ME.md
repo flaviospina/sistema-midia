@@ -79,6 +79,10 @@ Há dois caminhos:
   
   Ao publicar, o sistema gera um link temporário da foto (30 min) que a Meta baixa, envia a legenda e registra o resultado no histórico da foto. Limites da Meta: JPEG, até 8 MB, proporção entre 4:5 e 1.91:1, 25 publicações por dia por conta. Quando o token expirar, a tela avisa e basta colar um novo.
 
+### Links públicos com pré-visualização (metatags)
+
+Quem é da equipe (admin, fotógrafo, redes sociais) pode gerar um **link público** de uma foto (no visualizador → *Link*) ou do álbum inteiro (botão *Link público*, escolhendo a validade: 7, 30, 90 dias ou sem validade). O link abre sem login e a página traz as metatags **Open Graph** e **Twitter Card** (`og:title`, `og:description`, `og:image` com a própria foto ou a capa do álbum, dimensões, `og:url`, `twitter:card=summary_large_image`), então WhatsApp, Facebook, Instagram, Telegram e outros mostram a imagem e o título na pré-visualização. A página tem botões de WhatsApp, Facebook, Telegram, copiar e compartilhamento nativo do celular. Os links ativos aparecem no fim do álbum com contagem de acessos e podem ser desativados a qualquer momento. As demais páginas (login etc.) usam a imagem padrão `assets/img/og-default.jpg` (1200×630).
+
 ## 9. Cron (recomendado)
 
 cPanel → Cron Jobs → a cada hora:

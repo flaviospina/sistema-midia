@@ -286,5 +286,13 @@ code, .font-monospace { color: var(--navy-800); }
 .app-dialog__icon--success { background: #e3f7ec; color: #1a6b41; }
 .modal-backdrop.show { opacity: .6; background: var(--navy-950); }
 
+/* Páginas públicas de compartilhamento */
+.publico-topo { display: flex; justify-content: center; padding: 1rem; }
+.publico-card { border-radius: var(--raio); overflow: hidden; }
+.publico-img { max-height: 80vh; object-fit: contain; background: #111; }
+.publico-rodape { color: rgba(255,255,255,.6); }
+.publico-rodape a { color: var(--ouro-300); }
+.share-url { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .85rem; word-break: break-all; }
+
 /* Garantia caso o CSS do Bootstrap não carregue */
 .d-none { display: none !important; }
