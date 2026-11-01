@@ -1,0 +1,6 @@
+<?php foreach (flashes() as $f): ?>
+  <div class="alert alert-<?= e($f['type']) ?> alert-dismissible fade show" role="alert">
+    <?= e($f['message']) ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+  </div>
+<?php endforeach; ?>
