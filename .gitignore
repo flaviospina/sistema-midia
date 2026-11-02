@@ -9,3 +9,4 @@ envio_midias/.env
 envio_midias/storage/**/*
 !envio_midias/storage/**/
 !envio_midias/storage/**/.gitkeep
+!envio_midias/storage/.htaccess
