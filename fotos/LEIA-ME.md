@@ -20,7 +20,7 @@ Estrutura recomendada (app fora da pasta pública):
 
 1. Envie a pasta `fotos/` do repositório para `/home/USUARIO/fotos_app/` (menos `public/`).
 2. Envie o conteúdo de `public/` para `public_html/fotos/`.
-3. Edite `public_html/fotos/paths.php` e aponte `APP_ROOT` para `/home/USUARIO/fotos_app`.
+3. Edite `public_html/fotos/paths.php`, descomente a linha `define('APP_ROOT', ...)` e aponte para `/home/USUARIO/fotos_app`. (Se `app/` estiver na mesma pasta do `index.php`, ou um nível acima como no repositório, o arquivo detecta sozinho e não precisa de ajuste.)
 4. Dê permissão de escrita (755 ou 775) a `fotos_app/storage` e subpastas (`albums`, `thumbs`, `tmp`, `logs`).
 5. Se preferir tudo dentro de `public_html/fotos`, mantenha a estrutura do repositório: o `.htaccess` nega acesso a `.env`, `.sql`, `.log` e `paths.php`, e `storage/albums` recebe um `.htaccess` com `Require all denied` automaticamente. Ainda assim a opção A é mais segura.
 
