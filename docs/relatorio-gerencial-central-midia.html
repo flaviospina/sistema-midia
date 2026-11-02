@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relatório Gerencial · Central de Mídia ADMoema</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--navy-950:#061224;--navy-900:#0b1f3a;--navy-800:#112a4d;--navy-700:#1a3a66;--ouro-500:#d4a72c;--ouro-400:#e6bd4a;--ouro-300:#f2d27a;--ouro-700:#a67c14;--areia-50:#faf7f0;--areia-100:#f3eee2;--areia-200:#e6dfcd;--cinza-700:#3b4657;--cinza-500:#64748b;--branco:#fff;--verde:#2fbf71;--vermelho:#e5484d;--raio:18px;--raio-sm:12px;--sombra:0 20px 50px -20px rgba(6,18,36,.35)}
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;font-family:"Comfortaa",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.6;color:var(--cinza-700);background:var(--areia-50);-webkit-font-smoothing:antialiased}
+  h1,h2,h3,h4{margin:0 0 .5rem;color:var(--navy-900);font-weight:700;line-height:1.2;letter-spacing:-.01em}
+  p{margin:0 0 1em}
+  a{color:var(--navy-800)}
+  .container{width:min(100% - 2rem,1080px);margin-inline:auto}
+  /* Capa */
+  .capa{position:relative;overflow:hidden;color:var(--branco);background:radial-gradient(1200px 600px at 80% -10%,#1c4a86 0%,transparent 60%),linear-gradient(160deg,var(--navy-950) 0%,var(--navy-900) 55%,#0d2547 100%);padding:3.5rem 0 3rem}
+  .capa::before{content:"";position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:48px 48px;-webkit-mask-image:radial-gradient(ellipse at center,#000 30%,transparent 75%);mask-image:radial-gradient(ellipse at center,#000 30%,transparent 75%)}
+  .capa .container{position:relative}
+  .eyebrow{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ouro-300);padding:.4rem 1rem;border:1px solid rgba(230,189,74,.35);border-radius:999px;background:rgba(230,189,74,.08);margin-bottom:1.25rem}
+  .capa h1{color:var(--branco);font-size:clamp(1.9rem,4.5vw,3rem);margin-bottom:.4rem}
+  .capa h1 strong{color:var(--ouro-400)}
+  .capa .sub{color:rgba(255,255,255,.78);font-size:1.05rem;max-width:720px}
+  .capa .meta{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;margin-top:1.5rem;font-size:.88rem;color:rgba(255,255,255,.7)}
+  .capa .meta strong{color:var(--branco)}
+  .marca{display:inline-flex;align-items:center;gap:.6rem;margin-bottom:1.5rem;font-weight:600}
+  .marca__logo{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--navy-800);color:var(--ouro-400);font-size:1.2rem}
+  /* Seções */
+  .secao{padding:2.5rem 0}
+  .rotulo{font-size:.72rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ouro-700);margin-bottom:.6rem;display:flex;align-items:center;gap:.6rem}
+  .rotulo::before{content:"";width:26px;height:2px;background:var(--ouro-500);border-radius:2px}
+  .secao h2{font-size:clamp(1.4rem,3vw,1.9rem);margin-bottom:1rem}
+  .lead{font-size:1.08rem;color:var(--cinza-500)}
+  .card{background:var(--branco);border:1px solid var(--areia-200);border-radius:var(--raio);padding:1.4rem 1.5rem;box-shadow:0 6px 24px -18px rgba(6,18,36,.35)}
+  .grid{display:grid;gap:1rem}
+  .grid-2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .grid-3{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+  .grid-4{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+  .stat{text-align:center;padding:1.1rem 1rem}
+  .stat .num{font-size:2.2rem;font-weight:700;color:var(--navy-900);line-height:1}
+  .stat .lbl{font-size:.82rem;color:var(--cinza-500);margin-top:.35rem}
+  .destaque{border-left:5px solid var(--ouro-500);background:var(--areia-100)}
+  .modulo h3{font-size:1.02rem;display:flex;align-items:center;gap:.5rem}
+  .modulo .ic{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--navy-900),var(--navy-700));color:var(--ouro-400);font-size:1rem;flex-shrink:0}
+  .modulo p{font-size:.93rem;color:var(--cinza-500);margin:0}
+  ul.lista{margin:0;padding-left:1.1rem}
+  ul.lista li{margin-bottom:.45rem}
+  .pros-contras{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .pros h3{color:#1a6b41}.contras h3{color:#9b2a2e}
+  .pros ul.lista li::marker{color:var(--verde)}.contras ul.lista li::marker{color:var(--vermelho)}
+  .tag{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.15rem .55rem;border-radius:999px;background:var(--areia-100);color:var(--navy-800);border:1px solid var(--areia-200);margin-left:.3rem;vertical-align:middle}
+  table{width:100%;border-collapse:collapse;font-size:.92rem;background:var(--branco);border-radius:var(--raio-sm);overflow:hidden}
+  th,td{text-align:left;padding:.65rem .8rem;border-bottom:1px solid var(--areia-200);vertical-align:top}
+  th{background:var(--areia-100);color:var(--navy-900);font-size:.8rem;text-transform:uppercase;letter-spacing:.06em}
+  tr:last-child td{border-bottom:0}
+  .ganho{display:flex;gap:.9rem;align-items:flex-start}
+  .ganho .n{flex:0 0 40px;height:40px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,var(--ouro-400),var(--ouro-500));color:var(--navy-950);font-weight:700}
+  .ganho h3{font-size:1rem;margin-bottom:.2rem}
+  .ganho p{margin:0;font-size:.93rem;color:var(--cinza-500)}
+  .recom{background:linear-gradient(135deg,var(--navy-900),var(--navy-700));color:rgba(255,255,255,.85);border-radius:var(--raio);padding:1.6rem 1.8rem}
+  .recom h2{color:var(--branco)}
+  .recom strong{color:var(--ouro-300)}
+  .recom .rotulo{color:var(--ouro-400)}
+  .passo{display:grid;grid-template-columns:40px 1fr;gap:.8rem;align-items:start;margin-bottom:.8rem}
+  .passo .n{width:40px;height:40px;border-radius:12px;background:var(--navy-900);color:var(--ouro-400);display:grid;place-items:center;font-weight:700}
+  .rodape{background:var(--navy-950);color:rgba(255,255,255,.6);text-align:center;padding:2rem 0;font-size:.85rem}
+  .rodape strong{color:var(--ouro-400)}
+  .small{font-size:.85rem;color:var(--cinza-500)}
+  @media print{body{background:#fff}.capa{padding:2rem 0}.secao{padding:1.2rem 0;break-inside:avoid}.card{box-shadow:none;break-inside:avoid}a{text-decoration:none;color:inherit}}
+</style>
+</head>
+<body>
+
+<header class="capa">
+  <div class="container">
+    <div class="marca"><span class="marca__logo">&#9673;</span> Central de <strong style="color:var(--ouro-400)">&nbsp;Mídia</strong>&nbsp;ADMoema</div>
+    <div><span class="eyebrow">Relatório gerencial · Novembro de 2026</span></div>
+    <h1>Uma ferramenta para a <strong>mídia servir melhor</strong> a igreja</h1>
+    <p class="sub">Apresentação do novo sistema do Ministério de Multimídia aos pastores <strong>A.&nbsp;A. Américo</strong> e <strong>Elias</strong>: o que ele faz, o que a igreja ganha, os pontos de atenção e a recomendação para a implantação.</p>
+    <div class="meta">
+      <span><strong>Igreja:</strong> Assembleia de Deus · Ministério do Belém · Setor 124 Moema</span>
+      <span><strong>Responsável técnico:</strong> Flávio Roberto Spina (IT Thrive)</span>
+      <span><strong>Endereço:</strong> admoema.com.br/midia</span>
+    </div>
+  </div>
+</header>
+
+<section class="secao">
+  <div class="container">
+    <div class="rotulo">Resumo executivo</div>
+    <h2>Em uma página</h2>
+    <p class="lead">A Central de Mídia reúne, em um único lugar com login, tudo o que hoje está espalhado em grupos de WhatsApp, planilhas e pastas pessoais: as fotos e vídeos da igreja, a escala dos voluntários, os pedidos de arte dos ministérios, o cuidado com o direito de imagem, o patrimônio da mídia e a formação da equipe. Foi construída em seis etapas, testada ponta a ponta e roda na hospedagem que a igreja já paga, sem licenças de software.</p>
+    <div class="grid grid-4" style="margin-top:1.2rem">
+      <div class="card stat"><div class="num">6</div><div class="lbl">módulos entregues</div></div>
+      <div class="card stat"><div class="num">7</div><div class="lbl">perfis de acesso com permissões</div></div>
+      <div class="card stat"><div class="num">52</div><div class="lbl">tabelas de dados organizadas</div></div>
+      <div class="card stat"><div class="num">R$ 0</div><div class="lbl">em licenças de software</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="secao" style="padding-top:0">
+  <div class="container">
+    <div class="rotulo">O que o sistema faz</div>
+    <h2>Seis frentes, um só lugar</h2>
+    <div class="grid grid-3">
+      <div class="card modulo"><h3><span class="ic">&#128247;</span> Repositório de arquivos</h3><p>Fotos, vídeos, áudios, artes e documentos em pastas por ano e evento. Qualquer membro envia pelo celular; convidados usam uma página pública com QR Code e tudo passa por uma fila de aprovação. Busca por evento, tag, tipo e período; download em ZIP; links de compartilhamento com validade.</p></div>
+      <div class="card modulo"><h3><span class="ic">&#128197;</span> Eventos e escala</h3><p>Cultos fixos gerados automaticamente, vagas por função (som, projeção, câmera, transmissão…), sugestão de escala com rodízio justo, confirmação pelo voluntário, troca entre colegas com aprovação, indisponibilidades e calendário no celular (Google Agenda).</p></div>
+      <div class="card modulo"><h3><span class="ic">&#127912;</span> Pedidos de arte</h3><p>Líderes de ministério pedem artes com briefing e prazo; a equipe produz em quadro Kanban; o solicitante revisa; a mídia confere o checklist de identidade visual; o pastor aprova quando o formato exige. Tudo com histórico e versões.</p></div>
+      <div class="card modulo"><h3><span class="ic">&#128227;</span> Comunicação e WhatsApp</h3><p>Artes aprovadas viram agenda de postagens (redes, telão, boletim). Avisos automáticos por WhatsApp: escala, lembrete na véspera, recusas, novos arquivos na quarentena e status das artes. O voluntário responde SIM/NÃO pelo próprio WhatsApp.</p></div>
+      <div class="card modulo"><h3><span class="ic">&#128737;</span> Direito de imagem e LGPD</h3><p>Cadastro de quem não autoriza aparecer em fotos e transmissões, com atenção especial a menores. Arquivos marcados ficam restritos. Termo de uso com aceite registrado, trilha de auditoria e atendimento a pedidos de exclusão de dados.</p></div>
+      <div class="card modulo"><h3><span class="ic">&#127891;</span> Patrimônio, checklist e capacitação</h3><p>Inventário dos equipamentos com etiqueta QR Code, empréstimo e manutenção; checklist pré-culto por função; relatório pós-culto com audiência da transmissão; trilha de treinamento por função e painel do líder com indicadores.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="secao" style="background:var(--areia-100)">
+  <div class="container">
+    <div class="rotulo">Ganhos para a igreja</div>
+    <h2>O que muda na prática</h2>
+    <div class="grid grid-2">
+      <div class="card ganho"><div class="n">1</div><div><h3>Memória da igreja preservada</h3><p>As fotos e vídeos dos cultos deixam de se perder em conversas de WhatsApp e passam a ter um lugar organizado, com busca, por ano e evento. Daqui a dez anos, a história continuará acessível.</p></div></div>
+      <div class="card ganho"><div class="n">2</div><div><h3>Escala justa e sem falhas</h3><p>O rodízio automático distribui o serviço entre os voluntários, respeita indisponibilidades e avisa com antecedência. Menos "furos" no culto e menos sobrecarga nos mesmos irmãos.</p></div></div>
+      <div class="card ganho"><div class="n">3</div><div><h3>Comunicação com prazo e qualidade</h3><p>Pedidos de arte com briefing e prazo mínimo, aprovação pastoral quando necessária e checklist de identidade visual. A igreja fala com uma só voz, sem correria de última hora.</p></div></div>
+      <div class="card ganho"><div class="n">4</div><div><h3>Proteção das pessoas</h3><p>Quem não autoriza imagem é respeitado de forma sistemática, menores recebem cuidado especial e a igreja cumpre a LGPD com registro de consentimentos e auditoria.</p></div></div>
+      <div class="card ganho"><div class="n">5</div><div><h3>Cuidado com o patrimônio</h3><p>Cada equipamento tem ficha, etiqueta QR Code, histórico de empréstimos e manutenções. Fica claro onde está cada item e quanto a igreja tem investido.</p></div></div>
+      <div class="card ganho"><div class="n">6</div><div><h3>Formação de servos</h3><p>Trilhas de treinamento por função: o aprendiz só é escalado quando estiver apto. A liderança enxerga, no painel, quem serve, quem recusa, onde faltam pessoas e o que precisa de atenção.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="secao">
+  <div class="container">
+    <div class="rotulo">Avaliação</div>
+    <h2>Prós e contras</h2>
+    <div class="pros-contras">
+      <div class="card pros">
+        <h3>Pontos fortes</h3>
+        <ul class="lista">
+          <li><strong>Sem custo de licença:</strong> roda na hospedagem atual (HostGator); nada de mensalidade de software.</li>
+          <li><strong>Feito sob medida</strong> para a rotina da ADMoema: nomes, fluxos e perfis são os da igreja.</li>
+          <li><strong>Segurança desde o início:</strong> senhas protegidas, bloqueio de tentativas, permissões checadas no servidor, arquivos nunca expostos por link direto, auditoria de todas as ações.</li>
+          <li><strong>Funciona no celular</strong> e envia arquivos grandes em pedaços, retomando se a conexão cair.</li>
+          <li><strong>Avisos automáticos por WhatsApp</strong>, o canal que os voluntários já usam.</li>
+          <li><strong>Pronto para crescer:</strong> login único preparado para os sistemas da igreja (/pix, /biblio) e para o novo Envio de Mídias.</li>
+          <li><strong>Código próprio da igreja</strong>, documentado e versionado: não há dependência de fornecedor.</li>
+        </ul>
+      </div>
+      <div class="card contras">
+        <h3>Pontos de atenção</h3>
+        <ul class="lista">
+          <li><strong>Adoção exige disciplina:</strong> o valor só aparece se a equipe realmente enviar as fotos, confirmar a escala e abrir os pedidos pelo sistema, e não pelo WhatsApp.</li>
+          <li><strong>Espaço em disco:</strong> vídeos ocupam muito. A hospedagem compartilhada tem limite; o sistema avisa quando se aproxima, mas será preciso decidir sobre um plano maior ou arquivo externo (Google Drive) no futuro.</li>
+          <li><strong>WhatsApp depende de um serviço à parte</strong> (n8n + Evolution API em uma VPS), com pequeno custo mensal e necessidade de manutenção ocasional.</li>
+          <li><strong>Precisa de um administrador</strong> na mídia para aprovar cadastros, moderar a quarentena e cuidar das configurações.</li>
+          <li><strong>Curva de aprendizado</strong> inicial para líderes de ministério e para quem pouco usa sistemas; recomenda-se um treinamento curto.</li>
+          <li><strong>Manutenção técnica</strong> periódica (atualizações de PHP na hospedagem, cópias de segurança) continua necessária, como em qualquer sistema.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="secao" style="padding-top:0">
+  <div class="container">
+    <div class="rotulo">Investimento e segurança</div>
+    <h2>O que custa e o que protege</h2>
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>Custos</h3>
+        <table>
+          <tr><th>Item</th><th>Situação</th></tr>
+          <tr><td>Hospedagem (HostGator) e domínio</td><td>Já existentes; sem custo adicional</td></tr>
+          <tr><td>Licenças de software</td><td>Nenhuma: tudo em código aberto e código próprio</td></tr>
+          <tr><td>Servidor do n8n para WhatsApp</td><td>VPS pequena, custo mensal baixo (já usada pela igreja para automações)</td></tr>
+          <tr><td>Desenvolvimento</td><td>Realizado; manutenção e evolução conforme a demanda</td></tr>
+          <tr><td>Armazenamento futuro</td><td>Avaliar plano maior ou Google Drive quando o uso de vídeo crescer</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>Segurança e privacidade</h3>
+        <ul class="lista">
+          <li>Acesso por login com perfis: admin, coordenador, membro da mídia, líder de ministério, pastor, membro da igreja e convidado.</li>
+          <li>Permissões verificadas no servidor em toda ação, não apenas na tela.</li>
+          <li>Arquivos guardados fora da área pública e entregues só após checar quem pede; versões exibidas sem dados de localização (GPS).</li>
+          <li>Proteção contra ataques comuns (CSRF, injeção de SQL, envio de arquivos maliciosos, força bruta no login).</li>
+          <li>Trilha de auditoria: quem fez o quê e quando. Registro de consentimentos LGPD e canal para pedidos de exclusão de dados.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="secao" style="background:var(--areia-100)">
+  <div class="container">
+    <div class="rotulo">Caminho de implantação</div>
+    <h2>Como colocar em uso, sem traumas</h2>
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="passo"><div class="n">1</div><div><strong>Publicação e cadastro da equipe</strong><br><span class="small">Sistema no ar em admoema.com.br/midia; administrador cadastra coordenadores e membros da mídia; funções e níveis definidos.</span></div></div>
+        <div class="passo"><div class="n">2</div><div><strong>Primeiro mês: escala e arquivos</strong><br><span class="small">Cultos fixos cadastrados, primeira escala montada no sistema, fotos dos cultos enviadas pela equipe. QR Code no telão para os membros enviarem fotos.</span></div></div>
+        <div class="passo"><div class="n">3</div><div><strong>Segundo mês: ministérios e artes</strong><br><span class="small">Líderes de ministério recebem acesso e passam a pedir artes pelo sistema; aprovação pastoral configurada para telão e impressos.</span></div></div>
+        <div class="passo"><div class="n">4</div><div><strong>Terceiro mês: WhatsApp e patrimônio</strong><br><span class="small">Avisos automáticos ligados; inventário etiquetado; checklist pré-culto em uso; painel do líder apresentado à liderança.</span></div></div>
+      </div>
+      <div class="card destaque">
+        <h3>O que pedimos à liderança pastoral</h3>
+        <ul class="lista">
+          <li><strong>Apoio público</strong> à ferramenta: orientar ministérios a pedir artes e enviar materiais pelo sistema.</li>
+          <li><strong>Definir quem aprova</strong> artes para telão e impressos (aprovação pastoral) e em que prazo.</li>
+          <li><strong>Validar a política de imagem:</strong> como a igreja trata quem não autoriza fotos e transmissões, especialmente menores.</li>
+          <li><strong>Indicar um administrador</strong> da mídia e um suplente, responsáveis pelo dia a dia do sistema.</li>
+          <li><strong>Decidir, mais adiante,</strong> sobre o armazenamento de vídeos (plano maior ou Google Drive).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="secao">
+  <div class="container">
+    <div class="recom">
+      <div class="rotulo" style="color:var(--ouro-400)">Recomendação</div>
+      <h2>Implantar por etapas, começando pela escala e pelas fotos</h2>
+      <p>O sistema está pronto e testado. O maior risco não é técnico, e sim de <strong>adoção</strong>: por isso recomendamos começar pelos dois usos de maior impacto imediato, a <strong>escala dos voluntários</strong> e o <strong>envio das fotos dos cultos</strong>, consolidar o hábito na equipe e só então abrir aos ministérios e ligar os avisos por WhatsApp. Em três meses a igreja terá a memória dos cultos organizada, uma escala mais justa e um fluxo claro de comunicação, sem gasto com licenças.</p>
+      <p style="margin:0"><strong>Complemento já disponível:</strong> o módulo <em>Envio de Mídias</em>, publicado separadamente em admoema.com.br/proj/envio_midias, dedicado às fotos dos cultos, com melhoria de imagem no navegador, links de compartilhamento com pré-visualização e publicação nas redes sociais pela conta de cada responsável.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="rodape">
+  <div class="container">
+    <div><strong>Central de Mídia ADMoema</strong> · Relatório gerencial para a liderança pastoral · Novembro de 2026</div>
+    <div style="margin-top:.4rem">Assembleia de Deus · Ministério do Belém · Setor 124 Moema · Preparado por Flávio Roberto Spina (IT Thrive)</div>
+  </div>
+</footer>
+</body>
+</html>
