@@ -35,7 +35,7 @@ final class ShareController
 
     public function revoke(int $id): never
     {
-        $l = Database::one('SELECT l.*, p.album_id AS photo_album FROM share_links l LEFT JOIN photos p ON p.id = l.photo_id WHERE l.id = :id', ['id' => $id]) ?? abort(404);
+        $l = Database::one('SELECT l.*, p.album_id AS photo_album FROM em_share_links l LEFT JOIN em_photos p ON p.id = l.photo_id WHERE l.id = :id', ['id' => $id]) ?? abort(404);
         ShareLink::revoke($id);
         Logger::audit('link_publico_revogado', 'share_links', $id);
         flash('success', 'Link desativado. Quem o tiver não consegue mais abrir.');

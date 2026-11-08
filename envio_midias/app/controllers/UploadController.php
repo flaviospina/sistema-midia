@@ -31,7 +31,7 @@ final class UploadController
             json_response(false, null, 'Só fotos: JPG, PNG, WebP ou HEIC.', 422);
         }
         // Retomada: mesmo nome/tamanho/usuário/álbum ainda aberto
-        $open = Database::one("SELECT * FROM photo_uploads WHERE album_id = :a AND user_id = :u AND original_name = :n AND size_bytes = :s AND status = 'aberto' ORDER BY created_at DESC LIMIT 1", ['a' => $albumId, 'u' => Auth::id(), 'n' => mb_substr($name, 0, 255), 's' => $size]);
+        $open = Database::one("SELECT * FROM em_uploads WHERE album_id = :a AND user_id = :u AND original_name = :n AND size_bytes = :s AND status = 'aberto' ORDER BY created_at DESC LIMIT 1", ['a' => $albumId, 'u' => Auth::id(), 'n' => mb_substr($name, 0, 255), 's' => $size]);
         if ($open) {
             json_response(true, ['upload_id' => $open['id'], 'chunk_bytes' => (int) $open['chunk_bytes'], 'chunks_total' => (int) $open['chunks_total'], 'received' => Upload::received($open['id'])]);
         }
@@ -95,7 +95,7 @@ final class UploadController
             Image::memoryOk($dest);
             $id = Photo::create(['album_id' => (int) $a['id'], 'file_name' => $fileName, 'original_name' => $up['original_name'], 'mime' => $mime, 'size_bytes' => (int) filesize($dest), 'width' => null, 'height' => null, 'sha256' => $sha, 'taken_at' => Image::takenAt($dest, $mime), 'has_thumb' => 0, 'has_display' => 0]);
             $d = Image::derivatives($dest, $mime, $id);
-            Database::run('UPDATE photos SET width = :w, height = :h, has_thumb = :t, has_display = :d WHERE id = :id', ['w' => $d['width'], 'h' => $d['height'], 't' => $d['has_thumb'], 'd' => $d['has_display'], 'id' => $id]);
+            Database::run('UPDATE em_photos SET width = :w, height = :h, has_thumb = :t, has_display = :d WHERE id = :id', ['w' => $d['width'], 'h' => $d['height'], 't' => $d['has_thumb'], 'd' => $d['has_display'], 'id' => $id]);
             Upload::finish($up['id']);
             Album::refreshStats((int) $a['id']);
             Logger::audit('foto_enviada', 'photos', $id, null, ['album_id' => $a['id'], 'file' => $fileName, 'bytes' => filesize($dest)]);

@@ -51,7 +51,7 @@ final class AuthController
             redirect('/login');
         }
         if (User::needsRehash($user['password_hash'])) {
-            Database::run('UPDATE users SET password_hash = :h WHERE id = :id', ['h' => User::hash($password), 'id' => $user['id']]);
+            Database::run('UPDATE em_users SET password_hash = :h WHERE id = :id', ['h' => User::hash($password), 'id' => $user['id']]);
         }
         RateLimit::clear('login', $key);
 

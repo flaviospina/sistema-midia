@@ -1,20 +1,19 @@
 -- =====================================================================
 -- Envio de Mídias ADMoema — esquema do banco (idempotente, compatível com MySQL 5.7)
 -- Importe pelo phpMyAdmin. Pode ser executado quantas vezes quiser.
--- As tabelas users, user_roles, audit_log, rate_limit_hits e password_resets
--- são as MESMAS da Central de Mídia: se o banco for compartilhado, elas já
--- existem e são reaproveitadas (login único); se for um banco só das fotos,
--- são criadas aqui.
+-- Sistema independente: todas as tabelas têm o prefixo em_ e não há ligação com
+-- outros sistemas da igreja (usuários, senhas e perfis são próprios).
 -- =====================================================================
 SET NAMES utf8mb4;
 
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS em_users (
     id                   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name                 VARCHAR(150) NOT NULL,
     email                VARCHAR(191) NOT NULL,
     whatsapp             VARCHAR(20)  NULL,
     photo_path           VARCHAR(120) NULL,
     password_hash        VARCHAR(255) NOT NULL,
+    role                 ENUM('admin','fotografo','social','membro') NOT NULL DEFAULT 'membro',
     must_change_password TINYINT(1)   NOT NULL DEFAULT 0,
     status               ENUM('pendente','ativo','inativo','anonimizado') NOT NULL DEFAULT 'ativo',
     session_version      INT UNSIGNED NOT NULL DEFAULT 1,
@@ -22,24 +21,12 @@ CREATE TABLE IF NOT EXISTS users (
     anonymized_at        DATETIME     NULL,
     created_at           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at           DATETIME     NULL ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_users_email (email),
-    KEY idx_users_status (status),
-    KEY idx_users_name (name)
+    UNIQUE KEY uq_em_users_email (email),
+    KEY idx_em_users_status (status),
+    KEY idx_em_users_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS user_roles (
-    id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id    INT UNSIGNED NOT NULL,
-    app_code   VARCHAR(20)  NOT NULL,
-    role       VARCHAR(30)  NOT NULL,
-    created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME     NULL ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_user_roles (user_id, app_code),
-    KEY idx_user_roles_role (app_code, role),
-    CONSTRAINT fk_user_roles_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS audit_log (
+CREATE TABLE IF NOT EXISTS em_audit_log (
     id          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id     INT UNSIGNED NULL,
     action      VARCHAR(60)  NOT NULL,
@@ -56,7 +43,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
     KEY idx_audit_action (action)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS rate_limit_hits (
+CREATE TABLE IF NOT EXISTS em_rate_limits (
     id       BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     bucket   VARCHAR(40)  NOT NULL,
     rate_key VARCHAR(191) NOT NULL,
@@ -65,7 +52,7 @@ CREATE TABLE IF NOT EXISTS rate_limit_hits (
     KEY idx_rate_limit_hit_at (hit_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS password_resets (
+CREATE TABLE IF NOT EXISTS em_password_resets (
     id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id    INT UNSIGNED NOT NULL,
     token_hash CHAR(64)     NOT NULL,
@@ -73,15 +60,15 @@ CREATE TABLE IF NOT EXISTS password_resets (
     used_at    DATETIME     NULL,
     ip         VARCHAR(45)  NULL,
     created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_password_resets_token (token_hash),
+    UNIQUE KEY uq_em_password_resets_token (token_hash),
     KEY idx_password_resets_user (user_id, used_at),
-    CONSTRAINT fk_password_resets_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    CONSTRAINT fk_em_password_resets_user FOREIGN KEY (user_id) REFERENCES em_users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- Segurança do login: código de verificação por e-mail (2ª etapa) e aparelhos confiáveis
 -- ---------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS login_codes (
+CREATE TABLE IF NOT EXISTS em_login_codes (
     id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id    INT UNSIGNED NOT NULL,
     code_hash  CHAR(64)     NOT NULL,
@@ -91,10 +78,10 @@ CREATE TABLE IF NOT EXISTS login_codes (
     ip         VARCHAR(45)  NULL,
     created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     KEY idx_login_codes_user (user_id, used_at, expires_at),
-    CONSTRAINT fk_login_codes_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    CONSTRAINT fk_em_login_codes_user FOREIGN KEY (user_id) REFERENCES em_users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS trusted_devices (
+CREATE TABLE IF NOT EXISTS em_trusted_devices (
     id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id    INT UNSIGNED NOT NULL,
     token_hash CHAR(64)     NOT NULL,
@@ -103,24 +90,24 @@ CREATE TABLE IF NOT EXISTS trusted_devices (
     expires_at DATETIME     NOT NULL,
     created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     last_used_at DATETIME   NULL,
-    UNIQUE KEY uq_trusted_devices_token (token_hash),
+    UNIQUE KEY uq_em_trusted_devices_token (token_hash),
     KEY idx_trusted_devices_user (user_id, expires_at),
-    CONSTRAINT fk_trusted_devices_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    CONSTRAINT fk_em_trusted_devices_user FOREIGN KEY (user_id) REFERENCES em_users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS user_preferences (
+CREATE TABLE IF NOT EXISTS em_user_prefs (
     user_id    INT UNSIGNED NOT NULL,
     pref_key   VARCHAR(60)  NOT NULL,
     value      VARCHAR(255) NULL,
     updated_at DATETIME     NULL ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, pref_key),
-    CONSTRAINT fk_user_preferences_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    CONSTRAINT fk_em_user_preferences_user FOREIGN KEY (user_id) REFERENCES em_users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- Álbuns (uma pasta por culto/evento) e fotos
 -- ---------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS photo_albums (
+CREATE TABLE IF NOT EXISTS em_albums (
     id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     event_date  DATE         NOT NULL,
     name        VARCHAR(120) NOT NULL,               -- ex.: Culto com a Família
@@ -133,12 +120,12 @@ CREATE TABLE IF NOT EXISTS photo_albums (
     created_by  INT UNSIGNED NULL,
     created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  DATETIME     NULL ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_albums_folder (folder),
+    UNIQUE KEY uq_em_albums_folder (folder),
     KEY idx_albums_date (event_date),
-    CONSTRAINT fk_albums_creator FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL
+    CONSTRAINT fk_em_albums_creator FOREIGN KEY (created_by) REFERENCES em_users (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS photos (
+CREATE TABLE IF NOT EXISTS em_photos (
     id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     album_id      INT UNSIGNED NOT NULL,
     parent_id     INT UNSIGNED NULL,                 -- versão editada de outra foto
@@ -156,16 +143,16 @@ CREATE TABLE IF NOT EXISTS photos (
     edit_note     VARCHAR(255) NULL,                 -- ajustes aplicados na versão editada
     uploaded_by   INT UNSIGNED NULL,
     created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_photos_album_file (album_id, file_name),
+    UNIQUE KEY uq_em_photos_album_file (album_id, file_name),
     KEY idx_photos_album (album_id, created_at),
     KEY idx_photos_sha (sha256),
     KEY idx_photos_parent (parent_id),
-    CONSTRAINT fk_photos_album FOREIGN KEY (album_id) REFERENCES photo_albums (id) ON DELETE CASCADE,
-    CONSTRAINT fk_photos_parent FOREIGN KEY (parent_id) REFERENCES photos (id) ON DELETE SET NULL,
-    CONSTRAINT fk_photos_user FOREIGN KEY (uploaded_by) REFERENCES users (id) ON DELETE SET NULL
+    CONSTRAINT fk_em_photos_album FOREIGN KEY (album_id) REFERENCES em_albums (id) ON DELETE CASCADE,
+    CONSTRAINT fk_em_photos_parent FOREIGN KEY (parent_id) REFERENCES em_photos (id) ON DELETE SET NULL,
+    CONSTRAINT fk_em_photos_user FOREIGN KEY (uploaded_by) REFERENCES em_users (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS photo_uploads (
+CREATE TABLE IF NOT EXISTS em_uploads (
     id             CHAR(32)     NOT NULL PRIMARY KEY, -- token aleatório
     album_id       INT UNSIGNED NOT NULL,
     user_id        INT UNSIGNED NOT NULL,
@@ -178,11 +165,11 @@ CREATE TABLE IF NOT EXISTS photo_uploads (
     created_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at     DATETIME     NULL ON UPDATE CURRENT_TIMESTAMP,
     KEY idx_uploads_status (status, created_at),
-    CONSTRAINT fk_uploads_album FOREIGN KEY (album_id) REFERENCES photo_albums (id) ON DELETE CASCADE,
-    CONSTRAINT fk_uploads_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    CONSTRAINT fk_em_uploads_album FOREIGN KEY (album_id) REFERENCES em_albums (id) ON DELETE CASCADE,
+    CONSTRAINT fk_em_uploads_user FOREIGN KEY (user_id) REFERENCES em_users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS photo_downloads (
+CREATE TABLE IF NOT EXISTS em_downloads (
     id         BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     photo_id   INT UNSIGNED NULL,
     album_id   INT UNSIGNED NULL,
@@ -195,22 +182,22 @@ CREATE TABLE IF NOT EXISTS photo_downloads (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Link público temporário de uma foto (a API da Meta precisa baixar a imagem por URL)
-CREATE TABLE IF NOT EXISTS photo_public_links (
+CREATE TABLE IF NOT EXISTS em_public_links (
     id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     photo_id   INT UNSIGNED NOT NULL,
     token_hash CHAR(64)     NOT NULL,
     expires_at DATETIME     NOT NULL,
     created_by INT UNSIGNED NULL,
     created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_public_links_token (token_hash),
+    UNIQUE KEY uq_em_public_links_token (token_hash),
     KEY idx_public_links_exp (expires_at),
-    CONSTRAINT fk_public_links_photo FOREIGN KEY (photo_id) REFERENCES photos (id) ON DELETE CASCADE
+    CONSTRAINT fk_em_public_links_photo FOREIGN KEY (photo_id) REFERENCES em_photos (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- Redes sociais: cada pessoa configura a própria conta (token guardado cifrado)
 -- ---------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS social_accounts (
+CREATE TABLE IF NOT EXISTS em_social_accounts (
     id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id        INT UNSIGNED NOT NULL,
     network        ENUM('instagram','facebook') NOT NULL,
@@ -220,11 +207,11 @@ CREATE TABLE IF NOT EXISTS social_accounts (
     token_expires_at DATETIME   NULL,
     created_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at     DATETIME     NULL ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_social_user_network (user_id, network),
-    CONSTRAINT fk_social_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    UNIQUE KEY uq_em_social_user_network (user_id, network),
+    CONSTRAINT fk_em_social_user FOREIGN KEY (user_id) REFERENCES em_users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS social_posts (
+CREATE TABLE IF NOT EXISTS em_social_posts (
     id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     photo_id    INT UNSIGNED NOT NULL,
     user_id     INT UNSIGNED NOT NULL,
@@ -237,24 +224,21 @@ CREATE TABLE IF NOT EXISTS social_posts (
     created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     KEY idx_social_posts_photo (photo_id),
     KEY idx_social_posts_user (user_id, created_at),
-    CONSTRAINT fk_social_posts_photo FOREIGN KEY (photo_id) REFERENCES photos (id) ON DELETE CASCADE,
-    CONSTRAINT fk_social_posts_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    CONSTRAINT fk_em_social_posts_photo FOREIGN KEY (photo_id) REFERENCES em_photos (id) ON DELETE CASCADE,
+    CONSTRAINT fk_em_social_posts_user FOREIGN KEY (user_id) REFERENCES em_users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- Dados iniciais: administrador (senha padrão do primeiro acesso: ADMoema2026@1 — troca obrigatória)
 -- ---------------------------------------------------------------------
-INSERT IGNORE INTO users (id, name, email, password_hash, must_change_password, status)
+INSERT IGNORE INTO em_users (id, name, email, password_hash, role, must_change_password, status)
 VALUES (1, 'Administrador', 'admin@admoema.com.br',
-        '$2y$10$gmWAn82ZAmf3ajOnaBsg7ea5v/Lwpp00Zm/whmSRqH.Mca.4tQw9K', 1, 'ativo');
-
-INSERT IGNORE INTO user_roles (user_id, app_code, role)
-SELECT id, 'fotos', 'admin' FROM users WHERE email = 'admin@admoema.com.br';
+        '$2y$10$gmWAn82ZAmf3ajOnaBsg7ea5v/Lwpp00Zm/whmSRqH.Mca.4tQw9K', 'admin', 1, 'ativo');
 
 -- ---------------------------------------------------------------------
 -- Links públicos de compartilhamento (foto ou álbum) com pré-visualização para redes sociais (Open Graph)
 -- ---------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS share_links (
+CREATE TABLE IF NOT EXISTS em_share_links (
     id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     token      CHAR(22)     NOT NULL,
     photo_id   INT UNSIGNED NULL,
@@ -264,10 +248,10 @@ CREATE TABLE IF NOT EXISTS share_links (
     revoked_at DATETIME     NULL,
     created_by INT UNSIGNED NULL,
     created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_share_links_token (token),
+    UNIQUE KEY uq_em_share_links_token (token),
     KEY idx_share_links_photo (photo_id),
     KEY idx_share_links_album (album_id),
-    CONSTRAINT fk_share_links_photo FOREIGN KEY (photo_id) REFERENCES photos (id) ON DELETE CASCADE,
-    CONSTRAINT fk_share_links_album FOREIGN KEY (album_id) REFERENCES photo_albums (id) ON DELETE CASCADE,
-    CONSTRAINT fk_share_links_user FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL
+    CONSTRAINT fk_em_share_links_photo FOREIGN KEY (photo_id) REFERENCES em_photos (id) ON DELETE CASCADE,
+    CONSTRAINT fk_em_share_links_album FOREIGN KEY (album_id) REFERENCES em_albums (id) ON DELETE CASCADE,
+    CONSTRAINT fk_em_share_links_user FOREIGN KEY (created_by) REFERENCES em_users (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

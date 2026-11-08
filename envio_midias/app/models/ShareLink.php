@@ -10,7 +10,7 @@ final class ShareLink
     {
         $token = rtrim(strtr(base64_encode(random_bytes(16)), '+/', '-_'), '=');
         Database::run(
-            'INSERT INTO share_links (token, photo_id, album_id, expires_at, created_by) VALUES (:t, :p, :a, ' . ($days > 0 ? 'DATE_ADD(NOW(), INTERVAL :d DAY)' : 'NULL') . ', :u)',
+            'INSERT INTO em_share_links (token, photo_id, album_id, expires_at, created_by) VALUES (:t, :p, :a, ' . ($days > 0 ? 'DATE_ADD(NOW(), INTERVAL :d DAY)' : 'NULL') . ', :u)',
             ['t' => $token, 'p' => $photoId, 'a' => $albumId, 'u' => Auth::id()] + ($days > 0 ? ['d' => $days] : [])
         );
         return $token;
@@ -24,7 +24,7 @@ final class ShareLink
         }
         return Database::one(
             'SELECT l.*, a.name AS album_name, a.event_date, a.description AS album_description, a.folder, a.cover_photo_id, a.photos_count
-               FROM share_links l LEFT JOIN photo_albums a ON a.id = COALESCE(l.album_id, (SELECT album_id FROM photos p WHERE p.id = l.photo_id))
+               FROM em_share_links l LEFT JOIN em_albums a ON a.id = COALESCE(l.album_id, (SELECT album_id FROM em_photos p WHERE p.id = l.photo_id))
               WHERE l.token = :t AND l.revoked_at IS NULL AND (l.expires_at IS NULL OR l.expires_at > NOW())',
             ['t' => $token]
         );
@@ -32,13 +32,13 @@ final class ShareLink
 
     public static function hit(int $id): void
     {
-        Database::run('UPDATE share_links SET views = views + 1 WHERE id = :id', ['id' => $id]);
+        Database::run('UPDATE em_share_links SET views = views + 1 WHERE id = :id', ['id' => $id]);
     }
 
     public static function forAlbum(int $albumId): array
     {
         return Database::all(
-            'SELECT l.*, u.name AS creator_name, p.file_name FROM share_links l LEFT JOIN users u ON u.id = l.created_by LEFT JOIN photos p ON p.id = l.photo_id
+            'SELECT l.*, u.name AS creator_name, p.file_name FROM em_share_links l LEFT JOIN em_users u ON u.id = l.created_by LEFT JOIN em_photos p ON p.id = l.photo_id
               WHERE (l.album_id = :a1 OR p.album_id = :a2) AND l.revoked_at IS NULL ORDER BY l.id DESC',
             ['a1' => $albumId, 'a2' => $albumId]
         );
@@ -46,11 +46,11 @@ final class ShareLink
 
     public static function revoke(int $id): void
     {
-        Database::run('UPDATE share_links SET revoked_at = NOW() WHERE id = :id', ['id' => $id]);
+        Database::run('UPDATE em_share_links SET revoked_at = NOW() WHERE id = :id', ['id' => $id]);
     }
 
     public static function purge(): void
     {
-        Database::run('DELETE FROM share_links WHERE (expires_at IS NOT NULL AND expires_at < DATE_SUB(NOW(), INTERVAL 30 DAY)) OR revoked_at < DATE_SUB(NOW(), INTERVAL 30 DAY)');
+        Database::run('DELETE FROM em_share_links WHERE (expires_at IS NOT NULL AND expires_at < DATE_SUB(NOW(), INTERVAL 30 DAY)) OR revoked_at < DATE_SUB(NOW(), INTERVAL 30 DAY)');
     }
 }

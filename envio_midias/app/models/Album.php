@@ -30,12 +30,12 @@ final class Album
 
     public static function find(int $id): ?array
     {
-        return Database::one('SELECT a.*, u.name AS creator_name FROM photo_albums a LEFT JOIN users u ON u.id = a.created_by WHERE a.id = :id', ['id' => $id]);
+        return Database::one('SELECT a.*, u.name AS creator_name FROM em_albums a LEFT JOIN em_users u ON u.id = a.created_by WHERE a.id = :id', ['id' => $id]);
     }
 
     public static function findByFolder(string $folder): ?array
     {
-        return Database::one('SELECT * FROM photo_albums WHERE folder = :f', ['f' => $folder]);
+        return Database::one('SELECT * FROM em_albums WHERE folder = :f', ['f' => $folder]);
     }
 
     /** Álbuns visíveis para o usuário atual, agrupados por mês. */
@@ -52,7 +52,7 @@ final class Album
             $params['q1'] = $params['q2'] = '%' . $q . '%';
         }
         return Database::all(
-            'SELECT a.*, c.file_name AS cover_file, c.id AS cover_id FROM photo_albums a LEFT JOIN photos c ON c.id = a.cover_photo_id
+            'SELECT a.*, c.file_name AS cover_file, c.id AS cover_id FROM em_albums a LEFT JOIN em_photos c ON c.id = a.cover_photo_id
               WHERE ' . implode(' AND ', $conds) . ' ORDER BY a.event_date DESC, a.id DESC',
             $params
         );
@@ -61,7 +61,7 @@ final class Album
     public static function years(): array
     {
         $hidden = Auth::can('albums.hidden') ? '' : ' WHERE hidden = 0';
-        return array_map('intval', array_column(Database::all("SELECT DISTINCT YEAR(event_date) y FROM photo_albums{$hidden} ORDER BY y DESC"), 'y'));
+        return array_map('intval', array_column(Database::all("SELECT DISTINCT YEAR(event_date) y FROM em_albums{$hidden} ORDER BY y DESC"), 'y'));
     }
 
     public static function create(string $date, string $name, ?string $description, bool $hidden): int
@@ -73,28 +73,28 @@ final class Album
         }
         @file_put_contents(ALBUMS_PATH . '/.htaccess', "Require all denied\n");
         return Database::insert(
-            'INSERT INTO photo_albums (event_date, name, folder, description, hidden, created_by) VALUES (:d, :n, :f, :desc, :h, :by)',
+            'INSERT INTO em_albums (event_date, name, folder, description, hidden, created_by) VALUES (:d, :n, :f, :desc, :h, :by)',
             ['d' => $date, 'n' => $name, 'f' => $folder, 'desc' => $description, 'h' => $hidden ? 1 : 0, 'by' => Auth::id()]
         );
     }
 
     public static function update(int $id, string $name, ?string $description, bool $hidden): void
     {
-        Database::run('UPDATE photo_albums SET name = :n, description = :d, hidden = :h WHERE id = :id', ['n' => $name, 'd' => $description, 'h' => $hidden ? 1 : 0, 'id' => $id]);
+        Database::run('UPDATE em_albums SET name = :n, description = :d, hidden = :h WHERE id = :id', ['n' => $name, 'd' => $description, 'h' => $hidden ? 1 : 0, 'id' => $id]);
     }
 
     public static function setCover(int $id, ?int $photoId): void
     {
-        Database::run('UPDATE photo_albums SET cover_photo_id = :p WHERE id = :id', ['p' => $photoId, 'id' => $id]);
+        Database::run('UPDATE em_albums SET cover_photo_id = :p WHERE id = :id', ['p' => $photoId, 'id' => $id]);
     }
 
     /** Recalcula contadores e capa (chamado após envio/exclusão). */
     public static function refreshStats(int $id): void
     {
         Database::run(
-            'UPDATE photo_albums a SET photos_count = (SELECT COUNT(*) FROM photos p WHERE p.album_id = a.id),
-                    size_bytes = (SELECT COALESCE(SUM(size_bytes),0) FROM photos p WHERE p.album_id = a.id),
-                    cover_photo_id = COALESCE((SELECT id FROM photos p WHERE p.id = a.cover_photo_id), (SELECT MIN(id) FROM photos p WHERE p.album_id = a.id AND p.has_thumb = 1))
+            'UPDATE em_albums a SET photos_count = (SELECT COUNT(*) FROM em_photos p WHERE p.album_id = a.id),
+                    size_bytes = (SELECT COALESCE(SUM(size_bytes),0) FROM em_photos p WHERE p.album_id = a.id),
+                    cover_photo_id = COALESCE((SELECT id FROM em_photos p WHERE p.id = a.cover_photo_id), (SELECT MIN(id) FROM em_photos p WHERE p.album_id = a.id AND p.has_thumb = 1))
               WHERE a.id = :id',
             ['id' => $id]
         );
@@ -102,7 +102,7 @@ final class Album
 
     public static function delete(array $album): void
     {
-        Database::run('DELETE FROM photo_albums WHERE id = :id', ['id' => $album['id']]);
+        Database::run('DELETE FROM em_albums WHERE id = :id', ['id' => $album['id']]);
         $dir = ALBUMS_PATH . '/' . $album['folder'];
         if (is_dir($dir)) {
             foreach (glob($dir . '/*') ?: [] as $f) {
@@ -119,6 +119,6 @@ final class Album
 
     public static function totals(): array
     {
-        return Database::one('SELECT COUNT(*) AS albums, COALESCE(SUM(photos_count),0) AS photos, COALESCE(SUM(size_bytes),0) AS bytes FROM photo_albums') ?? ['albums' => 0, 'photos' => 0, 'bytes' => 0];
+        return Database::one('SELECT COUNT(*) AS albums, COALESCE(SUM(photos_count),0) AS photos, COALESCE(SUM(size_bytes),0) AS bytes FROM em_albums') ?? ['albums' => 0, 'photos' => 0, 'bytes' => 0];
     }
 }

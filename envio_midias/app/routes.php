@@ -69,7 +69,6 @@ $r->post('/meus-dados/redes/remover', [AccountController::class, 'socialRemove']
 // Administração
 $r->get('/admin/usuarios', [AdminController::class, 'users'], ['perm' => 'users.manage']);
 $r->post('/admin/usuarios', [AdminController::class, 'store'], ['perm' => 'users.manage']);
-$r->post('/admin/usuarios/conceder', [AdminController::class, 'grant'], ['perm' => 'users.manage']);
 $r->post('/admin/usuarios/{id}/perfil', [AdminController::class, 'role'], ['perm' => 'users.manage']);
 $r->post('/admin/usuarios/{id}/ativar', [AdminController::class, 'toggle'], ['perm' => 'users.manage']);
 $r->post('/admin/usuarios/{id}/remover', [AdminController::class, 'revoke'], ['perm' => 'users.manage']);

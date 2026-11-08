@@ -1,6 +1,6 @@
 <?php
 // cron/limpeza.php — remove envios abandonados, códigos/links expirados e limites antigos.
-// cPanel → Cron Jobs: a cada hora →  php /home/USUARIO/public_html/adm_midia/envio_midias/cron/limpeza.php
+// cPanel → Cron Jobs: a cada hora →  php /home/USUARIO/public_html/envio_midias/cron/limpeza.php
 declare(strict_types=1);
 
 define('APP_ROOT', dirname(__DIR__));
@@ -10,8 +10,8 @@ $uploads = Upload::purgeExpired();
 LoginCode::purge();
 PublicLink::purge();
 ShareLink::purge();
-Database::run('DELETE FROM rate_limit_hits WHERE hit_at < DATE_SUB(NOW(), INTERVAL 1 DAY)');
-Database::run('DELETE FROM password_resets WHERE expires_at < DATE_SUB(NOW(), INTERVAL 7 DAY)');
+Database::run('DELETE FROM em_rate_limits WHERE hit_at < DATE_SUB(NOW(), INTERVAL 1 DAY)');
+Database::run('DELETE FROM em_password_resets WHERE expires_at < DATE_SUB(NOW(), INTERVAL 7 DAY)');
 // Arquivos temporários órfãos (ZIPs não apagados, pastas de envio sem registro)
 foreach (glob(TMP_PATH . '/*') ?: [] as $f) {
     if (filemtime($f) < time() - UPLOAD_SESSION_HOURS * 3600) {

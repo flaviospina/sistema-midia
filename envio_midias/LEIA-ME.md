@@ -1,22 +1,22 @@
 # Envio de Mídias ADMoema — instalação e uso
 
-Sistema de envio, organização e visualização das fotos dos cultos e eventos da AD Moema, com área de login protegida, melhoria de fotos no navegador, links de compartilhamento com pré-visualização e publicação nas redes sociais pela conta de cada pessoa. É um sistema separado da Central de Mídia, mas preparado para o login único: usa as mesmas tabelas de usuários quando instalado no mesmo banco.
+Sistema de envio, organização e visualização das fotos dos cultos e eventos da AD Moema, com área de login protegida, melhoria de fotos no navegador, links de compartilhamento com pré-visualização e publicação nas redes sociais pela conta de cada pessoa. É um sistema **independente**: tem usuários, senhas, perfis e tabelas próprios (prefixo `em_`) e não depende de nenhum outro sistema da igreja.
 
 Arquitetura: **PHP 8.2 puro, PDO com prepared statements, MVC** (`app/core` = núcleo, `app/controllers`, `app/models`, `app/services`, `app/views`) e **URLs amigáveis** pelo `.htaccess` (toda requisição passa pelo `index.php`).
 
-Publicação: `https://admoema.com.br/adm_midia/envio_midias` (subpasta da Central de Mídia; pode ficar em qualquer outra pasta, basta ajustar o `BASE_URL`).
+Publicação: `https://admoema.com.br/envio_midias` (pasta própria, fora de qualquer outro sistema; pode ser outra pasta, basta ajustar o `BASE_URL`).
 
 ## 1. Banco de dados
 
-1. cPanel → **Bancos de dados MySQL**: use o banco da Central de Mídia (recomendado: login único) ou crie um banco novo e um usuário com todos os privilégios.
-2. phpMyAdmin → selecione o banco → **Importar** → `sql/schema.sql`. O arquivo é idempotente (pode importar de novo nas atualizações). No banco compartilhado ele só cria as tabelas novas (`photo_*`, `social_*`, `share_links`, `login_codes`, `trusted_devices`).
+1. cPanel → **Bancos de dados MySQL**: crie um banco só para este sistema (ex.: `usuario_envio_midias`) e um usuário com todos os privilégios.
+2. phpMyAdmin → selecione o banco → **Importar** → `sql/schema.sql`. O arquivo é idempotente (pode importar de novo nas atualizações). Todas as tabelas começam com `em_`.
 
 ## 2. Arquivos
 
 Tudo fica em **uma única pasta**, exatamente como está no repositório:
 
 ```
-public_html/adm_midia/envio_midias/
+public_html/envio_midias/
 ├── index.php          ← front controller (URLs amigáveis)
 ├── .htaccess          ← reescrita + bloqueio de app/, storage/, sql/, cron/ e .env
 ├── assets/            ← css, js, img (únicos arquivos servidos diretamente)
@@ -28,11 +28,11 @@ public_html/adm_midia/envio_midias/
 └── LEIA-ME.md
 ```
 
-1. Envie o conteúdo da pasta `envio_midias/` para `public_html/adm_midia/envio_midias/` (mantendo a estrutura acima). Nada de `public/` nem `paths.php`: o `index.php` já sabe onde está.
-   **Atenção ao `.htaccess`:** é o arquivo mais importante da pasta e, por começar com ponto, costuma ficar oculto ou não ser enviado. Sem ele, o `.htaccess` da pasta de cima (Central de Mídia) captura as URLs e responde **404**. Se ele não aparecer no servidor, renomeie `htaccess.txt` para `.htaccess`.
+1. Envie o conteúdo da pasta `envio_midias/` para `public_html/envio_midias/` (mantendo a estrutura acima). Nada de `public/` nem `paths.php`: o `index.php` já sabe onde está.
+   **Atenção ao `.htaccess`:** é o arquivo mais importante da pasta e, por começar com ponto, costuma ficar oculto ou não ser enviado. Sem ele, as URLs amigáveis respondem **404**. Se ele não aparecer no servidor, renomeie `htaccess.txt` para `.htaccess`. Não instale este sistema dentro da pasta de outro sistema.
 2. Dê permissão de escrita (755 ou 775) a `storage/` e às subpastas `albums`, `thumbs`, `tmp` e `logs`.
-3. Confirme que o `.htaccess` foi enviado (gerenciador de arquivos → *Configurações* → *Mostrar arquivos ocultos*). Teste abrindo `.../envio_midias/login`: deve aparecer a tela de login do **Envio de Mídias** (não a da Central).
-4. Se as URLs amigáveis derem 404 nesta hospedagem, abra o `.htaccess` e descomente `RewriteBase /adm_midia/envio_midias/` (ajuste se a pasta for outra).
+3. Confirme que o `.htaccess` foi enviado (gerenciador de arquivos → *Configurações* → *Mostrar arquivos ocultos*). Teste abrindo `.../envio_midias/login`: deve aparecer a tela de login do **Envio de Mídias**.
+4. Se as URLs amigáveis derem 404 nesta hospedagem, abra o `.htaccess` e descomente `RewriteBase /envio_midias/` (ajuste se a pasta for outra).
 
 Opcional e mais seguro: guardar as fotos fora da pasta pública apontando `STORAGE_PATH` no `.env` para uma pasta acima de `public_html` (ex.: `/home/USUARIO/envio_midias_storage`), com as mesmas subpastas.
 
@@ -40,17 +40,17 @@ Opcional e mais seguro: guardar as fotos fora da pasta pública apontando `STORA
 
 Copie `.env.example` para `.env` e preencha:
 
-- `BASE_URL=https://admoema.com.br/adm_midia/envio_midias` (sem barra no final). Se ficar vazio, o sistema deduz o caminho pela pasta do `index.php`.
+- `BASE_URL=https://admoema.com.br/envio_midias` (sem barra no final). Se ficar vazio, o sistema deduz o caminho pela pasta do `index.php`.
 - `APP_KEY`: 64 caracteres hexadecimais (32 bytes). Gere em random.org (bytes, hex) ou com `php -r "echo bin2hex(random_bytes(32));"`. Sem ela, as contas de redes sociais não podem ser guardadas.
 - `DB_*`: dados do banco.
-- `SESSION_NAME=ADMOEMA_SID` e `SESSION_COOKIE_PATH=/`: iguais aos da Central de Mídia para o login valer nos dois.
+- `SESSION_NAME=ENVIO_SID`: nome próprio do cookie de sessão, para o login deste sistema não se misturar com outros sistemas do mesmo site.
 - `TWO_FACTOR_MODE`: `opcional` (cada pessoa liga em *Meus dados*), `equipe` (obrigatório para admin, fotógrafos e redes sociais), `todos` ou `desligado`.
 - `MAIL_*`: necessário para o código de acesso e o "Esqueci minha senha". `mail` usa o PHP do HostGator; `smtp` usa uma conta de e-mail do cPanel (porta 465/SSL).
 - `UPLOAD_MAX_MB` (padrão 80 por foto) e `UPLOAD_CHUNK_MB` (padrão 2): o envio é em pedaços, então não depende de `upload_max_filesize`.
 
 ## 4. Primeiro acesso
 
-Entre em `admoema.com.br/adm_midia/envio_midias` com `admin@admoema.com.br` e a senha padrão **`ADMoema2026@1`**. O sistema exige a criação de uma senha pessoal antes de liberar qualquer tela. Depois, em *Administração → Usuários*, cadastre as pessoas: todas entram com a mesma senha padrão `ADMoema2026@1` e são obrigadas a trocá-la no primeiro acesso (a tela mostra o aviso). Quem já tem cadastro na Central de Mídia (mesmo banco) aparece em *Liberar quem já tem cadastro* e entra com a senha que já usa.
+Entre em `admoema.com.br/envio_midias` com `admin@admoema.com.br` e a senha padrão **`ADMoema2026@1`**. O sistema exige a criação de uma senha pessoal antes de liberar qualquer tela. Depois, em *Administração → Usuários*, cadastre as pessoas: todas entram com a mesma senha padrão `ADMoema2026@1` e são obrigadas a trocá-la no primeiro acesso (a tela mostra o aviso).
 
 Perfis:
 
@@ -97,7 +97,7 @@ Há três caminhos:
 cPanel → Cron Jobs → a cada hora:
 
 ```
-php /home/USUARIO/public_html/adm_midia/envio_midias/cron/limpeza.php
+php /home/USUARIO/public_html/envio_midias/cron/limpeza.php
 ```
 
 Remove envios abandonados, códigos e links expirados.

@@ -8,9 +8,9 @@ final class PasswordReset
     public static function issue(int $userId): string
     {
         $token = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
-        Database::run('UPDATE password_resets SET used_at = NOW() WHERE user_id = :u AND used_at IS NULL', ['u' => $userId]);
+        Database::run('UPDATE em_password_resets SET used_at = NOW() WHERE user_id = :u AND used_at IS NULL', ['u' => $userId]);
         Database::run(
-            'INSERT INTO password_resets (user_id, token_hash, expires_at, ip) VALUES (:u, :h, DATE_ADD(NOW(), INTERVAL :m MINUTE), :ip)',
+            'INSERT INTO em_password_resets (user_id, token_hash, expires_at, ip) VALUES (:u, :h, DATE_ADD(NOW(), INTERVAL :m MINUTE), :ip)',
             ['u' => $userId, 'h' => hash('sha256', $token), 'm' => PASSWORD_RESET_MINUTES, 'ip' => client_ip()]
         );
         return $token;
@@ -23,7 +23,7 @@ final class PasswordReset
             return null;
         }
         return Database::one(
-            'SELECT r.*, u.email, u.name, u.status FROM password_resets r JOIN users u ON u.id = r.user_id
+            'SELECT r.*, u.email, u.name, u.status FROM em_password_resets r JOIN em_users u ON u.id = r.user_id
               WHERE r.token_hash = :h AND r.used_at IS NULL AND r.expires_at > NOW()',
             ['h' => hash('sha256', $token)]
         );
@@ -31,17 +31,17 @@ final class PasswordReset
 
     public static function consume(int $id): void
     {
-        Database::run('UPDATE password_resets SET used_at = NOW() WHERE id = :id', ['id' => $id]);
+        Database::run('UPDATE em_password_resets SET used_at = NOW() WHERE id = :id', ['id' => $id]);
     }
 
     /** Pedidos recentes por usuário (limite anti-abuso). */
     public static function recentCount(int $userId, int $minutes = 60): int
     {
-        return (int) Database::value('SELECT COUNT(*) FROM password_resets WHERE user_id = :u AND created_at > DATE_SUB(NOW(), INTERVAL :m MINUTE)', ['u' => $userId, 'm' => $minutes]);
+        return (int) Database::value('SELECT COUNT(*) FROM em_password_resets WHERE user_id = :u AND created_at > DATE_SUB(NOW(), INTERVAL :m MINUTE)', ['u' => $userId, 'm' => $minutes]);
     }
 
     public static function purge(): int
     {
-        return Database::run('DELETE FROM password_resets WHERE expires_at < DATE_SUB(NOW(), INTERVAL 7 DAY)')->rowCount();
+        return Database::run('DELETE FROM em_password_resets WHERE expires_at < DATE_SUB(NOW(), INTERVAL 7 DAY)')->rowCount();
     }
 }

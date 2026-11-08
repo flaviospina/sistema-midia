@@ -6,7 +6,7 @@ final class Photo
 {
     public const ALLOWED = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'image/heic' => 'heic', 'image/heif' => 'heic'];
 
-    private const SELECT = 'SELECT p.*, a.folder, a.hidden AS album_hidden, a.name AS album_name, a.event_date, u.name AS uploader_name FROM photos p JOIN photo_albums a ON a.id = p.album_id LEFT JOIN users u ON u.id = p.uploaded_by';
+    private const SELECT = 'SELECT p.*, a.folder, a.hidden AS album_hidden, a.name AS album_name, a.event_date, u.name AS uploader_name FROM em_photos p JOIN em_albums a ON a.id = p.album_id LEFT JOIN em_users u ON u.id = p.uploaded_by';
 
     public static function find(int $id): ?array
     {
@@ -25,7 +25,7 @@ final class Photo
 
     public static function duplicateInAlbum(int $albumId, string $sha): ?array
     {
-        return Database::one('SELECT id, file_name FROM photos WHERE album_id = :a AND sha256 = :s LIMIT 1', ['a' => $albumId, 's' => $sha]);
+        return Database::one('SELECT id, file_name FROM em_photos WHERE album_id = :a AND sha256 = :s LIMIT 1', ['a' => $albumId, 's' => $sha]);
     }
 
     /** Nome de arquivo único dentro da pasta, preservando o nome original saneado. */
@@ -37,7 +37,7 @@ final class Photo
         $base = $base !== '' ? mb_substr($base, 0, 80) : 'foto';
         $name = $base . '.' . $ext;
         $i = 1;
-        while (Database::value('SELECT COUNT(*) FROM photos WHERE album_id = :a AND file_name = :f', ['a' => $albumId, 'f' => $name])) {
+        while (Database::value('SELECT COUNT(*) FROM em_photos WHERE album_id = :a AND file_name = :f', ['a' => $albumId, 'f' => $name])) {
             $name = $base . '-' . (++$i) . '.' . $ext;
         }
         return $name;
@@ -46,7 +46,7 @@ final class Photo
     public static function create(array $d): int
     {
         return Database::insert(
-            'INSERT INTO photos (album_id, parent_id, file_name, original_name, mime, size_bytes, width, height, sha256, taken_at, has_thumb, has_display, caption, edit_note, uploaded_by)
+            'INSERT INTO em_photos (album_id, parent_id, file_name, original_name, mime, size_bytes, width, height, sha256, taken_at, has_thumb, has_display, caption, edit_note, uploaded_by)
              VALUES (:album_id, :parent_id, :file_name, :original_name, :mime, :size_bytes, :width, :height, :sha256, :taken_at, :has_thumb, :has_display, :caption, :edit_note, :by)',
             $d + ['parent_id' => null, 'caption' => null, 'edit_note' => null, 'taken_at' => null, 'by' => Auth::id()]
         );
@@ -69,7 +69,7 @@ final class Photo
 
     public static function setCaption(int $id, ?string $caption): void
     {
-        Database::run('UPDATE photos SET caption = :c WHERE id = :id', ['c' => $caption, 'id' => $id]);
+        Database::run('UPDATE em_photos SET caption = :c WHERE id = :id', ['c' => $caption, 'id' => $id]);
     }
 
     public static function delete(array $photo): void
@@ -78,7 +78,7 @@ final class Photo
             foreach (self::versionsOf((int) $photo['id']) as $v) {
                 self::delete($v);
             }
-            Database::run('DELETE FROM photos WHERE id = :id', ['id' => $photo['id']]);
+            Database::run('DELETE FROM em_photos WHERE id = :id', ['id' => $photo['id']]);
             @unlink(self::path($photo));
             @unlink(self::thumbPath((int) $photo['id']));
             @unlink(self::displayPath((int) $photo['id']));
@@ -87,7 +87,7 @@ final class Photo
 
     public static function logDownload(?int $photoId, ?int $albumId, string $kind): void
     {
-        Database::run('INSERT INTO photo_downloads (photo_id, album_id, user_id, kind, ip) VALUES (:p, :a, :u, :k, :ip)', ['p' => $photoId, 'a' => $albumId, 'u' => Auth::id(), 'k' => $kind, 'ip' => client_ip()]);
+        Database::run('INSERT INTO em_downloads (photo_id, album_id, user_id, kind, ip) VALUES (:p, :a, :u, :k, :ip)', ['p' => $photoId, 'a' => $albumId, 'u' => Auth::id(), 'k' => $kind, 'ip' => client_ip()]);
     }
 
     /** Lista de fotos recentes para a tela inicial. */

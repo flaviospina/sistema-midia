@@ -6,15 +6,15 @@ final class AdminController
 {
     public function users(): never
     {
-        view('admin/users', ['title' => 'Usuários', 'users' => User::all(), 'others' => User::withoutRole(), 'roles' => Auth::ROLES, 'defaultPassword' => User::DEFAULT_PASSWORD]);
+        view('admin/users', ['title' => 'Usuários', 'users' => User::all(), 'roles' => Auth::ROLES, 'defaultPassword' => User::DEFAULT_PASSWORD]);
     }
 
     public function store(): never
     {
         $v = (new Validator($_POST))->required('name', 'o nome')->max('name', 150, 'Nome')->required('email', 'o e-mail')->email('email')->in('role', array_keys(Auth::ROLES), 'Perfil');
         $email = mb_strtolower(input('email'));
-        if (!$v->fails() && Database::one('SELECT u.id FROM users u JOIN user_roles r ON r.user_id = u.id AND r.app_code = :app WHERE u.email = :e', ['app' => APP_CODE, 'e' => $email])) {
-            $v->add('email', 'Esta pessoa já tem acesso ao sistema de fotos.');
+        if (!$v->fails() && User::emailExists($email)) {
+            $v->add('email', 'Já existe um usuário com este e-mail.');
         }
         if ($v->fails()) {
             with_errors($v->errors(), $_POST);
@@ -23,21 +23,6 @@ final class AdminController
         $id = User::create(input('name'), $email, input('role') ?: 'membro');
         Logger::audit('usuario_criado', 'users', $id, null, ['email' => $email, 'role' => input('role')]);
         flash('success', input('name') . ' cadastrado(a). Senha do primeiro acesso: ' . User::DEFAULT_PASSWORD . ' (troca obrigatória ao entrar).');
-        redirect('/admin/usuarios');
-    }
-
-    /** Dá acesso a alguém já cadastrado no banco compartilhado (Central de Mídia). */
-    public function grant(): never
-    {
-        $id = ctype_digit(input('user_id')) ? (int) input('user_id') : 0;
-        $u = $id ? Database::one('SELECT id, name FROM users WHERE id = :id', ['id' => $id]) : null;
-        if (!$u || !isset(Auth::ROLES[input('role')])) {
-            flash('danger', 'Pessoa ou perfil inválido.');
-            redirect('/admin/usuarios');
-        }
-        User::setRole($id, input('role'));
-        Logger::audit('usuario_acesso_concedido', 'users', $id, null, ['role' => input('role')]);
-        flash('success', $u['name'] . ' agora tem acesso (perfil ' . Auth::roleLabel(input('role')) . '). Entra com a senha que já usa na Central de Mídia.');
         redirect('/admin/usuarios');
     }
 
@@ -75,13 +60,12 @@ final class AdminController
     {
         $u = User::find($id) ?? abort(404);
         if ($id === Auth::id()) {
-            flash('warning', 'Você não pode remover o próprio acesso.');
+            flash('warning', 'Você não pode excluir o próprio usuário.');
             redirect('/admin/usuarios');
         }
-        User::removeRole($id);
-        Database::run('UPDATE users SET session_version = session_version + 1 WHERE id = :id', ['id' => $id]);
-        Logger::audit('usuario_acesso_removido', 'users', $id, ['role' => $u['role']], null);
-        flash('success', 'Acesso de ' . $u['name'] . ' ao sistema de fotos removido (o cadastro continua para os outros sistemas).');
+        User::delete($id);
+        Logger::audit('usuario_excluido', 'em_users', $id, ['email' => $u['email'], 'role' => $u['role']], null);
+        flash('success', 'Usuário ' . $u['name'] . ' excluído. As fotos enviadas por ele continuam nos álbuns.');
         redirect('/admin/usuarios');
     }
 
@@ -113,9 +97,9 @@ final class AdminController
             $params['a'] = $f['action'];
         }
         $where = implode(' AND ', $conds);
-        $total = (int) Database::value("SELECT COUNT(*) FROM audit_log l LEFT JOIN users u ON u.id = l.user_id WHERE {$where}", $params);
+        $total = (int) Database::value("SELECT COUNT(*) FROM em_audit_log l LEFT JOIN em_users u ON u.id = l.user_id WHERE {$where}", $params);
         $pg = paginate($total, current_page(), 50);
-        $rows = Database::all("SELECT l.*, u.name AS user_name FROM audit_log l LEFT JOIN users u ON u.id = l.user_id WHERE {$where} ORDER BY l.id DESC LIMIT :limit OFFSET :offset", $params + ['limit' => 50, 'offset' => $pg['offset']]);
-        view('admin/audit', ['title' => 'Auditoria', 'result' => ['itens' => $rows] + $pg, 'filters' => $f, 'actions' => array_column(Database::all('SELECT DISTINCT action FROM audit_log ORDER BY action'), 'action')]);
+        $rows = Database::all("SELECT l.*, u.name AS user_name FROM em_audit_log l LEFT JOIN em_users u ON u.id = l.user_id WHERE {$where} ORDER BY l.id DESC LIMIT :limit OFFSET :offset", $params + ['limit' => 50, 'offset' => $pg['offset']]);
+        view('admin/audit', ['title' => 'Auditoria', 'result' => ['itens' => $rows] + $pg, 'filters' => $f, 'actions' => array_column(Database::all('SELECT DISTINCT action FROM em_audit_log ORDER BY action'), 'action')]);
     }
 }

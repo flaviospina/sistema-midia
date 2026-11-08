@@ -9,7 +9,7 @@ DirectoryIndex index.php
 <IfModule mod_rewrite.c>
     RewriteEngine On
     # Se as URLs amigáveis não funcionarem na sua hospedagem, descomente a linha abaixo (ajuste a pasta se for outra):
-    # RewriteBase /adm_midia/envio_midias/
+    # RewriteBase /envio_midias/
 
     # Pastas internas nunca são servidas diretamente
     RewriteRule ^(app|storage|sql|cron)(/|$) - [F,L]

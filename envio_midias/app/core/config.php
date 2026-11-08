@@ -43,7 +43,6 @@ function env_bool(string $key, bool $default = false): bool
 }
 
 define('APP_VERSION', '1.0.0');
-define('APP_CODE', 'fotos'); // código deste sistema em user_roles (login único com a Central de Mídia)
 define('APP_ENV', env('APP_ENV', 'production'));
 define('APP_NAME', env('APP_NAME', 'Envio de Mídias ADMoema'));
 define('BASE_URL', rtrim(env('BASE_URL'), '/'));
@@ -55,7 +54,7 @@ define('DB_NAME', env('DB_NAME'));
 define('DB_USER', env('DB_USER'));
 define('DB_PASS', $_ENV['DB_PASS'] ?? '');
 
-define('SESSION_NAME', env('SESSION_NAME', 'ADMOEMA_SID'));
+define('SESSION_NAME', env('SESSION_NAME', 'ENVIO_SID'));
 define('SESSION_COOKIE_PATH', env('SESSION_COOKIE_PATH', '/'));
 define('SESSION_COOKIE_DOMAIN', env('SESSION_COOKIE_DOMAIN'));
 define('SESSION_IDLE_MINUTES', env_int('SESSION_IDLE_MINUTES', 60));
@@ -99,7 +98,7 @@ define('SMTP_USER', env('SMTP_USER'));
 define('SMTP_PASS', $_ENV['SMTP_PASS'] ?? '');
 define('SUPPORT_CONTACT', env('SUPPORT_CONTACT', 'midia@admoema.com.br'));
 
-// Caminho base das URLs (ex.: "/adm_midia/envio_midias"). Vem do BASE_URL; se vazio, é deduzido da pasta do index.php.
+// Caminho base das URLs (ex.: "/envio_midias"). Vem do BASE_URL; se vazio, é deduzido da pasta do index.php.
 define('BASE_PATH', (static function (): string {
     if (BASE_URL !== '') {
         return rtrim((string) parse_url(BASE_URL, PHP_URL_PATH), '/');

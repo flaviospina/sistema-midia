@@ -13,7 +13,7 @@
           <td class="text-end text-nowrap"><?php if (!$self): ?>
             <form method="post" action="<?= url('/admin/usuarios/' . $uid . '/senha') ?>" class="d-inline" data-confirm="Voltar a senha de <?= e($u['name']) ?> para a padrão (<?= e($defaultPassword) ?>)? A pessoa terá de criar uma senha nova ao entrar e os aparelhos confiáveis serão esquecidos." data-confirm-ok="Redefinir"><?= Csrf::field() ?><input type="hidden" name="confirm" value="1"><button class="btn btn-sm btn-outline-secondary" title="Redefinir senha"><i class="bi bi-key"></i></button></form>
             <form method="post" action="<?= url('/admin/usuarios/' . $uid . '/ativar') ?>" class="d-inline" data-confirm="<?= $u['status'] === 'ativo' ? 'Desativar' : 'Reativar' ?> <?= e($u['name']) ?>?"><?= Csrf::field() ?><button class="btn btn-sm btn-outline-secondary" title="<?= $u['status'] === 'ativo' ? 'Desativar' : 'Reativar' ?>"><i class="bi bi-<?= $u['status'] === 'ativo' ? 'pause' : 'play' ?>"></i></button></form>
-            <form method="post" action="<?= url('/admin/usuarios/' . $uid . '/remover') ?>" class="d-inline" data-confirm="Remover o acesso de <?= e($u['name']) ?> ao sistema de fotos?" data-confirm-type="danger"><?= Csrf::field() ?><button class="btn btn-sm btn-outline-danger" title="Remover acesso"><i class="bi bi-person-x"></i></button></form>
+            <form method="post" action="<?= url('/admin/usuarios/' . $uid . '/remover') ?>" class="d-inline" data-confirm="Excluir o usuário <?= e($u['name']) ?>? As fotos que enviou continuam nos álbuns." data-confirm-type="danger"><?= Csrf::field() ?><button class="btn btn-sm btn-outline-danger" title="Excluir usuário"><i class="bi bi-person-x"></i></button></form>
           <?php endif; ?></td>
         </tr>
       <?php endforeach; ?>
@@ -30,14 +30,5 @@
       </div>
       <div class="card-footer"><button class="btn btn-primary btn-sm w-100">Cadastrar</button></div>
     </form>
-    <?php if ($others): ?>
-    <form method="post" action="<?= url('/admin/usuarios/conceder') ?>" class="card"><?= Csrf::field() ?>
-      <div class="card-header fw-semibold"><i class="bi bi-people"></i> Liberar quem já tem cadastro</div>
-      <div class="card-body small"><p class="text-muted">Pessoas da Central de Mídia (mesmo banco) ainda sem acesso às fotos. Elas entram com a senha que já usam.</p>
-        <select name="user_id" class="form-select form-select-sm mb-2"><?php foreach ($others as $o): ?><option value="<?= (int) $o['id'] ?>"><?= e($o['name']) ?> — <?= e($o['email']) ?></option><?php endforeach; ?></select>
-        <select name="role" class="form-select form-select-sm"><?php foreach ($roles as $k => $l): ?><option value="<?= e($k) ?>"<?= selected($k, 'membro') ?>><?= e($l) ?></option><?php endforeach; ?></select></div>
-      <div class="card-footer"><button class="btn btn-outline-primary btn-sm w-100">Liberar acesso</button></div>
-    </form>
-    <?php endif; ?>
   </div>
 </div>

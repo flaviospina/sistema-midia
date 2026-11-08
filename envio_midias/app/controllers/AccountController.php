@@ -13,7 +13,7 @@ final class AccountController
             'twoFactor' => User::pref((int) $me['id'], 'two_factor') === '1',
             'twoFactorMode' => TWO_FACTOR_MODE,
             'twoFactorForced' => in_array(TWO_FACTOR_MODE, ['todos'], true) || (TWO_FACTOR_MODE === 'equipe' && Auth::isTeam()),
-            'devices'   => Database::all('SELECT id, label, ip, created_at, last_used_at, expires_at FROM trusted_devices WHERE user_id = :u AND expires_at > NOW() ORDER BY id DESC', ['u' => $me['id']]),
+            'devices'   => Database::all('SELECT id, label, ip, created_at, last_used_at, expires_at FROM em_trusted_devices WHERE user_id = :u AND expires_at > NOW() ORDER BY id DESC', ['u' => $me['id']]),
             'accounts'  => SocialAccount::forUser((int) $me['id']),
             'cryptoOk'  => Crypto::ready(),
             'canShare'  => Auth::can('social.share'),

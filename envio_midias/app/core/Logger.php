@@ -41,7 +41,7 @@ final class Logger
     {
         try {
             Database::run(
-                'INSERT INTO audit_log (user_id, action, entity, entity_id, before_data, after_data, ip, user_agent)
+                'INSERT INTO em_audit_log (user_id, action, entity, entity_id, before_data, after_data, ip, user_agent)
                  VALUES (:user_id, :action, :entity, :entity_id, :before_data, :after_data, :ip, :user_agent)',
                 [
                     'user_id'     => $userId ?? Auth::id(),
