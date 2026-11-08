@@ -1,0 +1,28 @@
+# CÓPIA do arquivo .htaccess.
+# Arquivos que começam com ponto ficam ocultos no gerenciador de arquivos do cPanel e às vezes não são enviados.
+# Se na pasta envio_midias NÃO existir um arquivo chamado ".htaccess", renomeie este arquivo para ".htaccess".
+
+# Envio de Mídias ADMoema — URLs amigáveis e proteção das pastas internas
+Options -Indexes -MultiViews
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+ RewriteBase /proj/envio_midias/RewriteEngine On
+ RewriteBase /proj/envio_midias/# Se as URLs amigáveis não funcionarem na sua hospedagem, descomente a linha abaixo:
+ RewriteBase /proj/envio_midias/# RewriteBase /proj/envio_midias/
+
+ RewriteBase /proj/envio_midias/# Pastas internas nunca são servidas diretamente
+ RewriteBase /proj/envio_midias/RewriteRule ^(app|storage|sql|cron)(/|$) - [F,L]
+
+ RewriteBase /proj/envio_midias/# Arquivos reais (assets) são servidos normalmente; o resto vai para o roteador
+ RewriteBase /proj/envio_midias/RewriteCond %{REQUEST_FILENAME} !-f
+ RewriteBase /proj/envio_midias/RewriteRule ^ index.php [QSA,L]
+</IfModule>
+
+<FilesMatch "(^\.|\.(env|sql|log|md|ini|example|lock)$)">
+ RewriteBase /proj/envio_midias/Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+ RewriteBase /proj/envio_midias/Header always set X-Content-Type-Options "nosniff"
+</IfModule>

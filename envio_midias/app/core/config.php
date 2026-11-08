@@ -99,7 +99,7 @@ define('SMTP_USER', env('SMTP_USER'));
 define('SMTP_PASS', $_ENV['SMTP_PASS'] ?? '');
 define('SUPPORT_CONTACT', env('SUPPORT_CONTACT', 'midia@admoema.com.br'));
 
-// Caminho base das URLs (ex.: "/proj/envio_midias"). Vem do BASE_URL; se vazio, é deduzido da pasta do index.php.
+// Caminho base das URLs (ex.: "/adm_midia/envio_midias"). Vem do BASE_URL; se vazio, é deduzido da pasta do index.php.
 define('BASE_PATH', (static function (): string {
     if (BASE_URL !== '') {
         return rtrim((string) parse_url(BASE_URL, PHP_URL_PATH), '/');

@@ -1,6 +1,6 @@
 <?php
 // cron/limpeza.php — remove envios abandonados, códigos/links expirados e limites antigos.
-// cPanel → Cron Jobs: a cada hora →  php /home/USUARIO/public_html/proj/envio_midias/cron/limpeza.php
+// cPanel → Cron Jobs: a cada hora →  php /home/USUARIO/public_html/adm_midia/envio_midias/cron/limpeza.php
 declare(strict_types=1);
 
 define('APP_ROOT', dirname(__DIR__));

@@ -3,22 +3,22 @@ Options -Indexes -MultiViews
 DirectoryIndex index.php
 
 <IfModule mod_rewrite.c>
-    RewriteEngine On
-    # Se as URLs amigáveis não funcionarem na sua hospedagem, descomente a linha abaixo:
-    # RewriteBase /proj/envio_midias/
+ RewriteBase /proj/envio_midias/RewriteEngine On
+ RewriteBase /proj/envio_midias/# Se as URLs amigáveis não funcionarem na sua hospedagem, descomente a linha abaixo:
+ RewriteBase /proj/envio_midias/# RewriteBase /proj/envio_midias/
 
-    # Pastas internas nunca são servidas diretamente
-    RewriteRule ^(app|storage|sql|cron)(/|$) - [F,L]
+ RewriteBase /proj/envio_midias/# Pastas internas nunca são servidas diretamente
+ RewriteBase /proj/envio_midias/RewriteRule ^(app|storage|sql|cron)(/|$) - [F,L]
 
-    # Arquivos reais (assets) são servidos normalmente; o resto vai para o roteador
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ index.php [QSA,L]
+ RewriteBase /proj/envio_midias/# Arquivos reais (assets) são servidos normalmente; o resto vai para o roteador
+ RewriteBase /proj/envio_midias/RewriteCond %{REQUEST_FILENAME} !-f
+ RewriteBase /proj/envio_midias/RewriteRule ^ index.php [QSA,L]
 </IfModule>
 
 <FilesMatch "(^\.|\.(env|sql|log|md|ini|example|lock)$)">
-    Require all denied
+ RewriteBase /proj/envio_midias/Require all denied
 </FilesMatch>
 
 <IfModule mod_headers.c>
-    Header always set X-Content-Type-Options "nosniff"
+ RewriteBase /proj/envio_midias/Header always set X-Content-Type-Options "nosniff"
 </IfModule>
