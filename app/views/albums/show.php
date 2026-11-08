@@ -6,7 +6,7 @@
     <div class="text-muted small"><i class="bi bi-calendar-event"></i> <?= e(weekday_pt($a['event_date'])) ?>, <?= e(format_date($a['event_date'])) ?> · <?= count($photos) ?> foto(s)<?= $versions ? ' + ' . count($versions) . ' editada(s)' : '' ?> · <?= e(format_bytes((int) $a['size_bytes'])) ?><?= $a['description'] ? ' · ' . e($a['description']) : '' ?></div>
   </div>
   <div class="d-flex gap-2 flex-wrap">
-    <?php if (Auth::can('photos.upload')): ?><a href="<?= url('/albuns/' . $aid . '/enviar') ?>" class="btn btn-sm btn-primary"><i class="bi bi-cloud-arrow-up"></i> Enviar fotos</a><?php endif; ?>
+    <?php if (Auth::can('photos.upload')): ?><a href="<?= url('/albuns/' . $aid . '/enviar') ?>" class="btn btn-sm btn-primary"><i class="bi bi-cloud-arrow-up"></i> Enviar fotos</a><a href="<?= url('/albuns/' . $aid . '/drive') ?>" class="btn btn-sm btn-outline-primary" title="Importar de uma pasta compartilhada do Google Drive"><i class="bi bi-google"></i> Importar do Drive</a><?php endif; ?>
     <?php if (Auth::can('links.create')): ?>
       <form method="post" action="<?= url('/albuns/' . $aid . '/link') ?>" class="d-flex gap-1" title="Cria um link público do álbum com pré-visualização para redes sociais"><?= Csrf::field() ?>
         <select name="days" class="form-select form-select-sm w-auto" aria-label="Validade do link"><?php foreach (ShareLink::VALIDITY as $k => $l): ?><option value="<?= e($k) ?>"<?= selected($k, '30') ?>><?= e($l) ?></option><?php endforeach; ?></select>
@@ -20,7 +20,7 @@
   </div>
 </div>
 <?php if (!$photos): ?>
-  <div class="card"><div class="card-body text-center text-muted py-5"><i class="bi bi-image fs-1 d-block mb-2"></i>Esta pasta ainda não tem fotos.<?php if (Auth::can('photos.upload')): ?><br><a href="<?= url('/albuns/' . $aid . '/enviar') ?>" class="btn btn-primary btn-sm mt-3">Enviar fotos</a><?php endif; ?></div></div>
+  <div class="card"><div class="card-body text-center text-muted py-5"><i class="bi bi-image fs-1 d-block mb-2"></i>Esta pasta ainda não tem fotos.<?php if (Auth::can('photos.upload')): ?><br><a href="<?= url('/albuns/' . $aid . '/enviar') ?>" class="btn btn-primary btn-sm mt-3">Enviar fotos</a> <a href="<?= url('/albuns/' . $aid . '/drive') ?>" class="btn btn-outline-primary btn-sm mt-3"><i class="bi bi-google"></i> Importar do Google Drive</a><?php endif; ?></div></div>
 <?php else: ?>
 <div class="d-flex align-items-center gap-2 mb-2 small">
   <?php if (Auth::can('photos.download')): ?><div class="form-check mb-0"><input class="form-check-input" type="checkbox" id="selectAll"><label class="form-check-label" for="selectAll">Selecionar todas</label></div>

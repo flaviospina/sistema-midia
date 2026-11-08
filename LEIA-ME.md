@@ -30,7 +30,7 @@ public_html/envio_midias/
 
 1. Envie o conteúdo da pasta `envio_midias/` para `public_html/envio_midias/` (mantendo a estrutura acima). Nada de `public/` nem `paths.php`: o `index.php` já sabe onde está.
    **Atenção ao `.htaccess`:** é o arquivo mais importante da pasta e, por começar com ponto, costuma ficar oculto ou não ser enviado. Sem ele, as URLs amigáveis respondem **404**. Se ele não aparecer no servidor, renomeie `htaccess.txt` para `.htaccess`. Não instale este sistema dentro da pasta de outro sistema.
-2. Dê permissão de escrita (755 ou 775) a `storage/` e às subpastas `albums`, `thumbs`, `tmp` e `logs`.
+2. Dê permissão de escrita (755 ou 775) a `storage/` e às subpastas `albums`, `thumbs`, `tmp`, `logs` e `branding` (criada automaticamente para a logo).
 3. Confirme que o `.htaccess` foi enviado (gerenciador de arquivos → *Configurações* → *Mostrar arquivos ocultos*). Teste abrindo `.../envio_midias/login`: deve aparecer a tela de login do **Envio de Mídias**.
 4. Se as URLs amigáveis derem 404 nesta hospedagem, abra o `.htaccess` e descomente `RewriteBase /envio_midias/` (ajuste se a pasta for outra).
 
@@ -56,7 +56,7 @@ Perfis:
 
 | Perfil | Pode |
 |---|---|
-| Administrador | tudo: usuários, auditoria, pastas, fotos, links, publicação |
+| Administrador | tudo: usuários, configurações (logo, Google Drive), auditoria, pastas, fotos, links, publicação |
 | Fotógrafo(a) / equipe de mídia | criar pastas, enviar, editar, excluir fotos, salvar versões melhoradas, gerar links públicos |
 | Redes sociais | ver tudo (inclusive pastas ocultas), enviar, melhorar, salvar versões, gerar links e **publicar** nas redes com a própria conta |
 | Membro da igreja | ver e baixar fotos das pastas visíveis, melhorar fotos e baixar o resultado |
@@ -73,6 +73,14 @@ Perfis:
 ## 6. Pastas dos cultos
 
 Ao criar uma pasta, escolha a data: o sistema sugere o nome pelo dia da semana (domingo *Culto com a Família*, terça *Culto de Ensino*, quarta *Círculo de Oração*, quinta *Culto Público*, sábado *Culto dos Jovens e Adolescentes*; segunda e sexta pedem o nome). Você pode manter ou digitar outro nome e precisa **confirmar** antes de criar. A pasta física fica em `storage/albums/AAAA-MM-DD Nome do evento/` (sem acentos) e as fotos são gravadas lá com o nome original saneado. Miniaturas e versões de exibição ficam em `storage/thumbs/`. Uma pasta pode ser *oculta* (só a equipe vê).
+
+### Importar do Google Drive
+
+Na pasta do álbum → **Importar do Drive**. Cole o link de uma pasta do Google Drive compartilhada como *Qualquer pessoa com o link* (Leitor), clique em *Listar fotos* e depois em *Importar*: o sistema baixa arquivo por arquivo para a pasta do álbum, com barra de progresso, pulando repetidas e as já importadas (a origem de cada foto fica registrada). Só o primeiro nível da pasta é lido. Antes, o administrador informa em *Configurações* uma **chave da API do Google** (gratuita: console.cloud.google.com → ativar *Google Drive API* → *Credenciais → Chave de API*). Nenhuma senha do Google é informada ao sistema e nada é gravado no Drive.
+
+### Logo da igreja (marca d'água)
+
+Em *Administração → Configurações* o administrador envia a logo (PNG com transparência), escolhe posição (padrão: **superior direito**), tamanho, opacidade e margem, e liga *Aplicar automaticamente*. A partir daí a logo é gravada **na própria foto no momento da importação** (upload ou Drive), antes de qualquer ajuste: galeria, editor, downloads, links públicos e publicações já saem marcados. Fotos importadas antes da logo podem receber a marca pelo botão *Aplicar a marca nas fotos antigas* (em lotes). A marca não pode ser removida depois; fotos HEIC não são marcadas.
 
 ## 7. Melhorar fotos
 

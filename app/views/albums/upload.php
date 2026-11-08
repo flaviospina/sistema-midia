@@ -2,7 +2,7 @@
 <nav aria-label="breadcrumb" class="mb-2"><ol class="breadcrumb mb-0 small"><li class="breadcrumb-item"><a href="<?= url('/') ?>">Álbuns</a></li><li class="breadcrumb-item"><a href="<?= url('/albuns/' . (int) $a['id']) ?>"><?= e($a['name']) ?></a></li><li class="breadcrumb-item active">Enviar fotos</li></ol></nav>
 <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
   <div><h1 class="h4 mb-0">Enviar fotos</h1><div class="text-muted small"><span class="font-monospace"><?= e($a['folder']) ?></span> · <?= (int) $a['photos_count'] ?> foto(s) já na pasta</div></div>
-  <a href="<?= url('/albuns/' . (int) $a['id']) ?>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-images"></i> Ver álbum</a>
+  <div class="d-flex gap-2"><a href="<?= url('/albuns/' . (int) $a['id'] . '/drive') ?>" class="btn btn-sm btn-outline-primary"><i class="bi bi-google"></i> Importar do Drive</a><a href="<?= url('/albuns/' . (int) $a['id']) ?>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-images"></i> Ver álbum</a></div>
 </div>
 <div id="uploader" data-album="<?= (int) $a['id'] ?>" data-endpoint="<?= url('/api/upload') ?>" data-chunk="<?= (int) $chunkBytes ?>" data-max="<?= (int) $maxBytes ?>" data-album-url="<?= url('/albuns/' . (int) $a['id']) ?>">
   <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Escolher fotos">

@@ -45,6 +45,7 @@ $navItem = static fn(string $path, string $icon, string $label): string => '<li 
       <div class="menu-lateral__titulo">Administração</div>
       <ul class="nav flex-column">
         <?= $navItem('/admin/usuarios', 'bi-people', 'Usuários') ?>
+        <?= $navItem('/admin/configuracoes', 'bi-gear', 'Configurações (logo e Drive)') ?>
         <?= $navItem('/admin/auditoria', 'bi-journal-text', 'Auditoria') ?>
       </ul>
     <?php endif; ?>

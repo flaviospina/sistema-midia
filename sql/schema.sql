@@ -255,3 +255,21 @@ CREATE TABLE IF NOT EXISTS em_share_links (
     CONSTRAINT fk_em_share_links_album FOREIGN KEY (album_id) REFERENCES em_albums (id) ON DELETE CASCADE,
     CONSTRAINT fk_em_share_links_user FOREIGN KEY (created_by) REFERENCES em_users (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------
+-- Configurações do administrador (logo / marca d'água, chave da API do Google Drive)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS em_settings (
+    setting_key VARCHAR(60)  NOT NULL PRIMARY KEY,
+    value       TEXT         NULL,
+    updated_by  INT UNSIGNED NULL,
+    updated_at  DATETIME     NULL ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Colunas novas em instalações já existentes (MySQL 5.7 não tem ADD COLUMN IF NOT EXISTS)
+SET @c1 = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'em_photos' AND COLUMN_NAME = 'source_ref');
+SET @s1 = IF(@c1 = 0, 'ALTER TABLE em_photos ADD COLUMN source_ref VARCHAR(120) NULL, ADD KEY idx_em_photos_source (source_ref)', 'SELECT 1');
+PREPARE st1 FROM @s1; EXECUTE st1; DEALLOCATE PREPARE st1;
+SET @c2 = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'em_photos' AND COLUMN_NAME = 'watermarked');
+SET @s2 = IF(@c2 = 0, 'ALTER TABLE em_photos ADD COLUMN watermarked TINYINT(1) NOT NULL DEFAULT 0', 'SELECT 1');
+PREPARE st2 FROM @s2; EXECUTE st2; DEALLOCATE PREPARE st2;

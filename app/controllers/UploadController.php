@@ -72,34 +72,16 @@ final class UploadController
         }
         try {
             $file = Upload::assemble($up);
-            $mime = Image::detect($file);
-            if ($mime === null) {
-                Upload::finish($up['id'], 'cancelado');
-                json_response(false, null, 'O arquivo não é uma foto válida (JPG, PNG, WebP ou HEIC).', 422);
+            $r = PhotoIngest::store($a, $file, $up['original_name'], ['keep_duplicate' => !empty($in['keep_duplicate'])]);
+            if (isset($r['duplicate'])) {
+                json_response(true, ['duplicate' => $r['duplicate']]);
             }
-            $sha = hash_file('sha256', $file);
-            $dup = Photo::duplicateInAlbum((int) $a['id'], $sha);
-            if ($dup && empty($in['keep_duplicate'])) {
-                json_response(true, ['duplicate' => ['id' => (int) $dup['id'], 'name' => $dup['file_name']]]);
-            }
-            $ext = Photo::ALLOWED[$mime];
-            $fileName = Photo::uniqueFileName((int) $a['id'], $up['original_name'], $ext);
-            $dest = ALBUMS_PATH . '/' . $a['folder'] . '/' . $fileName;
-            if (!is_dir(dirname($dest))) {
-                @mkdir(dirname($dest), 0750, true);
-            }
-            if (!@rename($file, $dest)) {
-                throw new RuntimeException('Não foi possível gravar a foto na pasta do álbum.');
-            }
-            @chmod($dest, 0640);
-            Image::memoryOk($dest);
-            $id = Photo::create(['album_id' => (int) $a['id'], 'file_name' => $fileName, 'original_name' => $up['original_name'], 'mime' => $mime, 'size_bytes' => (int) filesize($dest), 'width' => null, 'height' => null, 'sha256' => $sha, 'taken_at' => Image::takenAt($dest, $mime), 'has_thumb' => 0, 'has_display' => 0]);
-            $d = Image::derivatives($dest, $mime, $id);
-            Database::run('UPDATE em_photos SET width = :w, height = :h, has_thumb = :t, has_display = :d WHERE id = :id', ['w' => $d['width'], 'h' => $d['height'], 't' => $d['has_thumb'], 'd' => $d['has_display'], 'id' => $id]);
             Upload::finish($up['id']);
-            Album::refreshStats((int) $a['id']);
-            Logger::audit('foto_enviada', 'photos', $id, null, ['album_id' => $a['id'], 'file' => $fileName, 'bytes' => filesize($dest)]);
-            json_response(true, ['photo' => ['id' => $id, 'name' => $fileName, 'thumb' => $d['has_thumb'] ? url('/fotos/' . $id . '/miniatura') : null, 'url' => url('/albuns/' . $a['id'], ['foto' => $id])]]);
+            Logger::audit('foto_enviada', 'em_photos', $r['photo'], null, ['album_id' => $a['id'], 'file' => $r['file_name']]);
+            json_response(true, ['photo' => ['id' => $r['photo'], 'name' => $r['file_name'], 'thumb' => url('/fotos/' . $r['photo'] . '/miniatura'), 'url' => url('/albuns/' . $a['id'], ['foto' => $r['photo']])]]);
+        } catch (InvalidArgumentException $e) {
+            Upload::finish($up['id'], 'cancelado');
+            json_response(false, null, $e->getMessage(), 422);
         } catch (Throwable $e) {
             Logger::error('Falha ao concluir envio: ' . $e->getMessage(), ['upload' => $up['id']]);
             json_response(false, null, APP_ENV === 'development' ? $e->getMessage() : 'Não foi possível concluir o envio. Tente novamente.', 500);

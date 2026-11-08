@@ -102,4 +102,90 @@ final class AdminController
         $rows = Database::all("SELECT l.*, u.name AS user_name FROM em_audit_log l LEFT JOIN em_users u ON u.id = l.user_id WHERE {$where} ORDER BY l.id DESC LIMIT :limit OFFSET :offset", $params + ['limit' => 50, 'offset' => $pg['offset']]);
         view('admin/audit', ['title' => 'Auditoria', 'result' => ['itens' => $rows] + $pg, 'filters' => $f, 'actions' => array_column(Database::all('SELECT DISTINCT action FROM em_audit_log ORDER BY action'), 'action')]);
     }
+
+    // ---- Configurações: logo / marca d'água e Google Drive --------------
+
+    public function settings(): never
+    {
+        view('admin/settings', ['title' => 'Configurações', 'hasLogo' => Watermark::hasLogo(), 'positions' => Setting::POSITIONS, 'unstamped' => Photo::countUnstamped(), 'driveReady' => Drive::ready()]);
+    }
+
+    public function saveSettings(): never
+    {
+        $v = (new Validator($_POST))->in('watermark_position', array_keys(Setting::POSITIONS), 'Posição')->max('google_api_key', 120, 'Chave da API');
+        foreach ([['watermark_width', 5, 50, 'Tamanho'], ['watermark_opacity', 10, 100, 'Opacidade'], ['watermark_margin', 0, 10, 'Margem']] as [$k, $min, $max, $label]) {
+            $val = input($k);
+            if ($val !== '' && (!ctype_digit($val) || (int) $val < $min || (int) $val > $max)) {
+                $v->add($k, "{$label}: use um número entre {$min} e {$max}.");
+            }
+        }
+        $key = trim(input('google_api_key'));
+        if ($key !== '' && !preg_match('/^[A-Za-z0-9_\-]{20,120}$/', $key)) {
+            $v->add('google_api_key', 'Chave inválida. Copie a chave completa do Google Cloud (começa com "AIza").');
+        }
+        if ($v->fails()) {
+            with_errors($v->errors(), $_POST);
+            redirect('/admin/configuracoes');
+        }
+        try {
+            if (!empty($_FILES['logo']) && ($_FILES['logo']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+                Watermark::storeLogo($_FILES['logo']);
+                Logger::audit('logo_enviada', 'em_settings', 'logo');
+            }
+        } catch (InvalidArgumentException | RuntimeException $e) {
+            with_errors(['logo' => $e->getMessage()], $_POST);
+            redirect('/admin/configuracoes');
+        }
+        if (input('remove_logo') === '1') {
+            Watermark::removeLogo();
+            Setting::set('watermark_enabled', '0');
+            Logger::audit('logo_removida', 'em_settings', 'logo');
+        }
+        Setting::set('watermark_enabled', input('watermark_enabled') === '1' && Watermark::hasLogo() ? '1' : '0');
+        Setting::set('watermark_position', input('watermark_position') ?: 'superior-direito');
+        foreach (['watermark_width', 'watermark_opacity', 'watermark_margin'] as $k) {
+            Setting::set($k, input($k) !== '' ? input($k) : Setting::DEFAULTS[$k]);
+        }
+        if (input('google_api_key_keep') !== '1' || $key !== '') {
+            Setting::set('google_api_key', $key);
+        }
+        Logger::audit('configuracoes_salvas', 'em_settings', null, null, ['watermark_enabled' => input('watermark_enabled') === '1', 'position' => input('watermark_position'), 'google_key' => $key !== '' ? 'definida' : (input('google_api_key_keep') === '1' ? 'mantida' : 'removida')]);
+        flash('success', 'Configurações salvas.' . (input('watermark_enabled') === '1' && !Watermark::hasLogo() ? ' Envie a logo para ativar a marca d\'água.' : ''));
+        redirect('/admin/configuracoes');
+    }
+
+    /** Pré-visualização da marca d'água sobre um fundo neutro. */
+    public function watermarkPreview(): never
+    {
+        $jpg = Watermark::preview();
+        if ($jpg === null) {
+            abort(404);
+        }
+        header('Content-Type: image/jpeg');
+        header('Cache-Control: private, no-store');
+        echo $jpg;
+        exit;
+    }
+
+    /** Aplica a marca d'água nas fotos importadas antes da logo (em lotes, chamado pelo JS até zerar). */
+    public function stampBatch(): never
+    {
+        if (!Watermark::enabled()) {
+            json_response(false, null, 'Ative a marca d\'água e envie a logo antes.', 422);
+        }
+        set_time_limit(120);
+        $done = 0;
+        foreach (Photo::unstamped(4) as $p) {
+            if (PhotoIngest::stampExisting($p)) {
+                $done++;
+            } else {
+                Database::run('UPDATE em_photos SET watermarked = 2 WHERE id = :id', ['id' => $p['id']]); // 2 = não foi possível (não tenta de novo)
+            }
+        }
+        $remaining = Photo::countUnstamped();
+        if ($done) {
+            Logger::audit('marca_dagua_aplicada_lote', 'em_photos', null, null, ['fotos' => $done, 'restantes' => $remaining]);
+        }
+        json_response(true, ['done' => $done, 'remaining' => $remaining]);
+    }
 }

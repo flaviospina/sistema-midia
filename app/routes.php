@@ -74,5 +74,14 @@ $r->post('/admin/usuarios/{id}/ativar', [AdminController::class, 'toggle'], ['pe
 $r->post('/admin/usuarios/{id}/remover', [AdminController::class, 'revoke'], ['perm' => 'users.manage']);
 $r->post('/admin/usuarios/{id}/senha', [AdminController::class, 'resetPassword'], ['perm' => 'users.manage']);
 $r->get('/admin/auditoria', [AdminController::class, 'audit'], ['perm' => 'audit.view']);
+$r->get('/admin/configuracoes', [AdminController::class, 'settings'], ['perm' => 'users.manage']);
+$r->post('/admin/configuracoes', [AdminController::class, 'saveSettings'], ['perm' => 'users.manage']);
+$r->get('/admin/configuracoes/marca-dagua.jpg', [AdminController::class, 'watermarkPreview'], ['perm' => 'users.manage']);
+$r->post('/admin/configuracoes/aplicar-marca', [AdminController::class, 'stampBatch'], ['perm' => 'users.manage']);
+
+// Importação do Google Drive
+$r->get('/albuns/{id}/drive', [DriveController::class, 'page'], ['perm' => 'photos.upload']);
+$r->post('/api/drive/listar', [DriveController::class, 'listFiles'], ['perm' => 'photos.upload']);
+$r->post('/api/drive/importar', [DriveController::class, 'importOne'], ['perm' => 'photos.upload']);
 
 return $r;

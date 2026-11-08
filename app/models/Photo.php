@@ -46,10 +46,37 @@ final class Photo
     public static function create(array $d): int
     {
         return Database::insert(
-            'INSERT INTO em_photos (album_id, parent_id, file_name, original_name, mime, size_bytes, width, height, sha256, taken_at, has_thumb, has_display, caption, edit_note, uploaded_by)
-             VALUES (:album_id, :parent_id, :file_name, :original_name, :mime, :size_bytes, :width, :height, :sha256, :taken_at, :has_thumb, :has_display, :caption, :edit_note, :by)',
-            $d + ['parent_id' => null, 'caption' => null, 'edit_note' => null, 'taken_at' => null, 'by' => Auth::id()]
+            'INSERT INTO em_photos (album_id, parent_id, file_name, original_name, mime, size_bytes, width, height, sha256, taken_at, has_thumb, has_display, caption, edit_note, source_ref, watermarked, uploaded_by)
+             VALUES (:album_id, :parent_id, :file_name, :original_name, :mime, :size_bytes, :width, :height, :sha256, :taken_at, :has_thumb, :has_display, :caption, :edit_note, :source_ref, :watermarked, :by)',
+            $d + ['parent_id' => null, 'caption' => null, 'edit_note' => null, 'taken_at' => null, 'source_ref' => null, 'watermarked' => 0, 'by' => Auth::id()]
         );
+    }
+
+    public static function findBySource(int $albumId, string $ref): ?array
+    {
+        return Database::one('SELECT id, file_name FROM em_photos WHERE album_id = :a AND source_ref = :r LIMIT 1', ['a' => $albumId, 'r' => $ref]);
+    }
+
+    /** source_ref => id das fotos já importadas no álbum. */
+    public static function sourceRefsInAlbum(int $albumId): array
+    {
+        $out = [];
+        foreach (Database::all('SELECT id, source_ref FROM em_photos WHERE album_id = :a AND source_ref IS NOT NULL', ['a' => $albumId]) as $r) {
+            $out[$r['source_ref']] = (int) $r['id'];
+        }
+        return $out;
+    }
+
+    /** Fotos ainda sem marca d'água que podem recebê-la (JPEG/PNG/WebP). */
+    public static function unstamped(int $limit = 5): array
+    {
+        // Versões editadas (parent_id) nunca entram: herdam a marca da foto de origem
+        return Database::all(self::SELECT . " WHERE p.watermarked = 0 AND p.parent_id IS NULL AND p.mime IN ('image/jpeg','image/png','image/webp') ORDER BY p.id LIMIT :l", ['l' => $limit]);
+    }
+
+    public static function countUnstamped(): int
+    {
+        return (int) Database::value("SELECT COUNT(*) FROM em_photos WHERE watermarked = 0 AND parent_id IS NULL AND mime IN ('image/jpeg','image/png','image/webp')");
     }
 
     public static function path(array $photo): string

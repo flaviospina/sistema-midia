@@ -110,19 +110,18 @@ final class PhotoController
             json_response(false, null, 'A versão editada deve ser JPEG.', 422);
         }
         $a = Album::find((int) $p['album_id']);
-        $base = pathinfo($p['file_name'], PATHINFO_FILENAME);
-        $fileName = Photo::uniqueFileName((int) $a['id'], $base . '_editada', 'jpg');
-        $dest = ALBUMS_PATH . '/' . $a['folder'] . '/' . $fileName;
-        if (!move_uploaded_file($f['tmp_name'], $dest)) {
+        $tmp = TMP_PATH . '/edit_' . bin2hex(random_bytes(8));
+        if (!move_uploaded_file($f['tmp_name'], $tmp)) {
             json_response(false, null, 'Não foi possível gravar a versão editada.', 500);
         }
         $note = mb_substr(input('note'), 0, 255) ?: null;
-        $newId = Photo::create(['album_id' => (int) $a['id'], 'parent_id' => $id, 'file_name' => $fileName, 'original_name' => $fileName, 'mime' => 'image/jpeg', 'size_bytes' => (int) filesize($dest), 'width' => null, 'height' => null, 'sha256' => hash_file('sha256', $dest), 'has_thumb' => 0, 'has_display' => 0, 'edit_note' => $note, 'caption' => $p['caption']]);
-        Image::memoryOk($dest);
-        $d = Image::derivatives($dest, 'image/jpeg', $newId);
-        Database::run('UPDATE em_photos SET width = :w, height = :h, has_thumb = :t, has_display = :d WHERE id = :id', ['w' => $d['width'], 'h' => $d['height'], 't' => $d['has_thumb'], 'd' => $d['has_display'], 'id' => $newId]);
-        Album::refreshStats((int) $a['id']);
-        Logger::audit('foto_versao_editada', 'photos', $newId, null, ['parent_id' => $id, 'note' => $note]);
+        try {
+            $r = PhotoIngest::store($a, $tmp, pathinfo($p['file_name'], PATHINFO_FILENAME) . '_editada.jpg', ['parent_id' => $id, 'edit_note' => $note, 'caption' => $p['caption'], 'keep_duplicate' => true, 'skip_watermark' => true, 'watermarked' => (int) $p['watermarked'] === 1 ? 1 : 0]);
+        } catch (Throwable $e) {
+            json_response(false, null, $e->getMessage(), 422);
+        }
+        $newId = (int) $r['photo'];
+        Logger::audit('foto_versao_editada', 'em_photos', $newId, null, ['parent_id' => $id, 'note' => $note]);
         json_response(true, ['id' => $newId, 'url' => url('/albuns/' . $a['id'], ['foto' => $newId]), 'thumb' => url('/fotos/' . $newId . '/miniatura')]);
     }
 
