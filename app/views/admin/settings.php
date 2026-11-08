@@ -40,7 +40,7 @@
             <li>Acesse <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">console.cloud.google.com</a> com a conta Google da igreja e crie um projeto (ex.: "Envio de Mídias").</li>
             <li>Menu <em>APIs e serviços → Biblioteca</em>: procure <strong>Google Drive API</strong> e clique em <em>Ativar</em>.</li>
             <li><em>APIs e serviços → Credenciais → Criar credenciais → Chave de API</em>. Copie a chave (começa com "AIza") e cole acima.</li>
-            <li>Recomendado: em <em>Restringir chave</em>, limite-a à Google Drive API.</li>
+            <li>Em <em>Restrições de aplicativo</em> escolha <strong>Nenhuma</strong> (ou <em>Sites</em> com <code>admoema.com.br/*</code>); em <em>Restrições de API</em> deixe só a Google Drive API. Chaves restritas a outros sites ou a apps Android/iOS são bloqueadas pelo Google quando o servidor chama a API.</li>
           </ol>
           <p class="mt-2 mb-0">A chave só lê pastas compartilhadas como <strong>"Qualquer pessoa com o link"</strong>; nada é gravado no Drive e nenhuma senha do Google é informada ao sistema.</p>
         </details>

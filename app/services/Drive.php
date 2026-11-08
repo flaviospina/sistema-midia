@@ -34,7 +34,8 @@ final class Drive
     private static function call(string $path, array $params): array
     {
         $ch = curl_init(self::API . $path . '?' . http_build_query($params + ['key' => self::key()]));
-        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 60, CURLOPT_CONNECTTIMEOUT => 15, CURLOPT_SSL_VERIFYPEER => true]);
+        // Referer = endereço do próprio site: permite usar uma chave restrita a "Sites" com o domínio da igreja
+        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 60, CURLOPT_CONNECTTIMEOUT => 15, CURLOPT_SSL_VERIFYPEER => true, CURLOPT_REFERER => absolute_url('/'), CURLOPT_HTTPHEADER => ['Accept: application/json']]);
         $body = curl_exec($ch);
         $err = curl_error($ch);
         $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
@@ -48,11 +49,17 @@ final class Drive
         }
         if ($status >= 400) {
             $msg = (string) ($data['error']['message'] ?? '');
-            throw new RuntimeException(match ($status) {
-                400, 403 => str_contains($msg, 'API key') || str_contains($msg, 'disabled') || str_contains($msg, 'not been used') ? 'Chave da API inválida ou API do Google Drive não ativada no projeto do Google Cloud.' : 'O Google recusou o acesso à pasta. Ela precisa estar compartilhada como "Qualquer pessoa com o link".',
-                404 => 'Pasta não encontrada. Confira o link e se ela está compartilhada como "Qualquer pessoa com o link".',
-                default => 'Erro do Google Drive (HTTP ' . $status . '): ' . ($msg ?: 'resposta inesperada'),
-            });
+            $reason = (string) ($data['error']['errors'][0]['reason'] ?? ($data['error']['details'][0]['reason'] ?? ''));
+            Logger::info('Google Drive recusou', ['status' => $status, 'reason' => $reason, 'msg' => $msg, 'path' => $path]);
+            $hint = match (true) {
+                stripos($msg, 'referer') !== false || stripos($msg, 'referrer') !== false => 'A chave da API está restrita a "Sites" e o Google bloqueou a chamada do servidor. No Google Cloud → Credenciais → sua chave → "Restrições de aplicativo", escolha "Nenhuma" (ou "Endereços IP" com o IP do servidor) e, em "Restrições de API", deixe só a Google Drive API.',
+                stripos($msg, 'API key not valid') !== false || $reason === 'keyInvalid' => 'A chave da API não é válida. Copie-a de novo no Google Cloud (Credenciais → Chave de API) e cole em Configurações.',
+                stripos($msg, 'has not been used') !== false || stripos($msg, 'is disabled') !== false || $reason === 'accessNotConfigured' => 'A Google Drive API não está ativada no projeto da chave. No Google Cloud → APIs e serviços → Biblioteca → "Google Drive API" → Ativar, aguarde 1 minuto e tente de novo.',
+                $status === 404 || $reason === 'notFound' => 'Pasta não encontrada. Confira o link e se ela está compartilhada como "Qualquer pessoa com o link".',
+                $status === 403 || $status === 401 => 'O Google recusou o acesso à pasta. Confira se ela está compartilhada como "Qualquer pessoa com o link" (Leitor) e se a chave não tem restrições que bloqueiem o servidor.',
+                default => 'Erro do Google Drive (HTTP ' . $status . ').',
+            };
+            throw new RuntimeException($hint . ($msg !== '' ? ' Mensagem do Google: "' . mb_substr($msg, 0, 300) . '".' : ''));
         }
         return $data;
     }

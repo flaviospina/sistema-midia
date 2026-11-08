@@ -76,7 +76,7 @@ Ao criar uma pasta, escolha a data: o sistema sugere o nome pelo dia da semana (
 
 ### Importar do Google Drive
 
-Na pasta do álbum → **Importar do Drive**. Cole o link de uma pasta do Google Drive compartilhada como *Qualquer pessoa com o link* (Leitor), clique em *Listar fotos* e depois em *Importar*: o sistema baixa arquivo por arquivo para a pasta do álbum, com barra de progresso, pulando repetidas e as já importadas (a origem de cada foto fica registrada). Só o primeiro nível da pasta é lido. Antes, o administrador informa em *Configurações* uma **chave da API do Google** (gratuita: console.cloud.google.com → ativar *Google Drive API* → *Credenciais → Chave de API*). Nenhuma senha do Google é informada ao sistema e nada é gravado no Drive.
+Na pasta do álbum → **Importar do Drive**. Cole o link de uma pasta do Google Drive compartilhada como *Qualquer pessoa com o link* (Leitor), clique em *Listar fotos* e depois em *Importar*: o sistema baixa arquivo por arquivo para a pasta do álbum, com barra de progresso, pulando repetidas e as já importadas (a origem de cada foto fica registrada). Só o primeiro nível da pasta é lido. Antes, o administrador informa em *Configurações* uma **chave da API do Google** (gratuita: console.cloud.google.com → ativar *Google Drive API* → *Credenciais → Chave de API*). Em *Restrições de aplicativo* da chave escolha **Nenhuma** ou *Sites* com `admoema.com.br/*` (o sistema se identifica com o endereço do site); em *Restrições de API* deixe só a Google Drive API. Se o Google recusar, a tela mostra a mensagem exata dele com a orientação. Nenhuma senha do Google é informada ao sistema e nada é gravado no Drive.
 
 ### Logo da igreja (marca d'água)
 
