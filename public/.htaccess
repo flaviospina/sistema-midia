@@ -5,6 +5,8 @@ DirectoryIndex index.php
     RewriteEngine On
     # Se o roteamento falhar na subpasta, descomente e ajuste:
     # RewriteBase /midia/
+    # Subpastas com sistema próprio (ex.: envio_midias) não passam pelo roteador da Central
+    RewriteRule ^(envio_midias)(/|$) - [L]
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^ index.php [QSA,L]
