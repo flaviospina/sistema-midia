@@ -56,6 +56,7 @@ $r->post('/albuns/{id}/link', [ShareController::class, 'createForAlbum'], ['perm
 $r->post('/links/{id}/revogar', [ShareController::class, 'revoke'], ['perm' => 'links.create']);
 $r->get('/s/{token}', [ShareController::class, 'view'], ['auth' => false]);
 $r->get('/s/{token}/imagem', [ShareController::class, 'image'], ['auth' => false]);
+$r->get('/s/{token}/cartao.jpg', [ShareController::class, 'card'], ['auth' => false]);
 $r->get('/s/{token}/{id}/imagem', [ShareController::class, 'albumImage'], ['auth' => false]);
 
 // Conta

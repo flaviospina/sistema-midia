@@ -1,7 +1,7 @@
 <?php
 /**
  * Metatags para redes sociais (Open Graph + Twitter Card). Recebe $meta opcional:
- * title, description, url, image, image_width, image_height, type. Sem $meta usa a imagem padrão do sistema.
+ * title, description, url, image, image_width, image_height, image_alt, type. Sem $meta usa a imagem padrão do sistema.
  */
 $m = $meta ?? [];
 $ogTitle = $m['title'] ?? (($title ?? '') !== '' ? $title . ' · ' . APP_NAME : APP_NAME);
@@ -25,9 +25,10 @@ $ogH = $m['image_height'] ?? (isset($m['image']) ? null : 630);
 <?php if ($ogW && $ogH): ?><meta property="og:image:width" content="<?= (int) $ogW ?>">
 <meta property="og:image:height" content="<?= (int) $ogH ?>">
 <?php endif; ?>
-<meta property="og:image:alt" content="<?= e($ogTitle) ?>">
+<meta property="og:image:alt" content="<?= e($m['image_alt'] ?? $ogTitle) ?>">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="<?= e($ogTitle) ?>">
 <meta name="twitter:description" content="<?= e($ogDesc) ?>">
 <meta name="twitter:image" content="<?= e($ogImage) ?>">
+<meta name="twitter:image:alt" content="<?= e($m['image_alt'] ?? $ogTitle) ?>">
 <link rel="canonical" href="<?= e($ogUrl) ?>">

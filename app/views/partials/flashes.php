@@ -14,6 +14,9 @@
       <a class="btn btn-sm btn-outline-secondary" href="https://www.facebook.com/sharer/sharer.php?u=<?= rawurlencode($sl['url']) ?>" target="_blank" rel="noopener"><i class="bi bi-facebook"></i> Facebook</a>
       <a class="btn btn-sm btn-outline-secondary" href="<?= e($sl['url']) ?>" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Abrir</a>
     </div>
-    <div class="small mt-1">Quem receber o link vê a pré-visualização com a imagem (WhatsApp, Facebook, Instagram, Telegram) e abre a página sem precisar de login.</div>
+    <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
+      <a href="<?= e($sl['url']) ?>/cartao.jpg" target="_blank" rel="noopener" title="Imagem que aparece na prévia ao colar o link"><img src="<?= e($sl['url']) ?>/cartao.jpg" alt="Prévia do compartilhamento" class="share-card-preview"></a>
+      <div class="small">Quem receber o link vê esta pré-visualização (WhatsApp, Facebook, Instagram, Telegram) e abre a página sem precisar de login.<br>Se a rede mostrar uma prévia antiga, atualize em <a href="https://developers.facebook.com/tools/debug/?q=<?= rawurlencode($sl['url']) ?>" target="_blank" rel="noopener">Facebook Sharing Debugger</a>.</div>
+    </div>
   </div>
 <?php endif; ?>

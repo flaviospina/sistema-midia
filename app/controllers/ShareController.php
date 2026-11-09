@@ -54,29 +54,57 @@ final class ShareController
                 'title'       => ($p['caption'] ?: $p['album_name']) . ' · ' . format_date($p['event_date']),
                 'description' => 'Foto do ' . $p['album_name'] . ' (' . weekday_pt($p['event_date']) . ', ' . format_date($p['event_date']) . ') — AD Moema.',
                 'url'         => $base,
-                'image'       => $base . '/imagem',
-                'image_width' => $p['width'] ? min((int) $p['width'], DISPLAY_MAX_SIDE) : null,
-                'image_height'=> $p['width'] && $p['height'] ? (int) round((int) $p['height'] * min(1, DISPLAY_MAX_SIDE / max((int) $p['width'], (int) $p['height']))) : null,
+                'image'       => $base . '/cartao.jpg',
+                'image_width' => SocialCard::WIDTH,
+                'image_height'=> SocialCard::HEIGHT,
+                'image_alt'   => ($p['caption'] ?: $p['album_name']) . ' — foto do ' . $p['album_name'] . ', AD Moema',
                 'type'        => 'article',
             ];
             view('share/photo', ['title' => $meta['title'], 'meta' => $meta, 'p' => $p, 'l' => $l, 'token' => $token, 'canonical' => $base], 'layout_public');
         }
-        $photos = array_values(array_filter(Photo::forAlbum((int) $l['album_id']), static fn($x) => $x['parent_id'] === null && $x['has_thumb']));
-        $cover = null;
-        foreach ($photos as $x) {
-            if ((int) $x['id'] === (int) $l['cover_photo_id']) {
-                $cover = $x;
-            }
-        }
-        $cover = $cover ?? ($photos[0] ?? null);
+        $photos = self::albumPhotos($l);
+        $cover = self::cover($l, $photos);
         $meta = [
             'title'       => $l['album_name'] . ' · ' . format_date($l['event_date']),
             'description' => count($photos) . ' foto(s) do ' . $l['album_name'] . ' (' . weekday_pt($l['event_date']) . ', ' . format_date($l['event_date']) . ')' . ($l['album_description'] ? ' — ' . $l['album_description'] : '') . ' — AD Moema.',
             'url'         => $base,
-            'image'       => $cover ? $base . '/' . (int) $cover['id'] . '/imagem' : absolute_url('/assets/img/og-default.jpg'),
+            'image'       => $base . '/cartao.jpg',
+            'image_width' => SocialCard::WIDTH,
+            'image_height'=> SocialCard::HEIGHT,
+            'image_alt'   => 'Capa do álbum ' . $l['album_name'] . ' (' . format_date($l['event_date']) . ') — AD Moema',
             'type'        => 'website',
         ];
         view('share/album', ['title' => $meta['title'], 'meta' => $meta, 'l' => $l, 'photos' => $photos, 'token' => $token, 'canonical' => $base], 'layout_public');
+    }
+
+    /** @return list<array> fotos visíveis (originais com miniatura) do álbum do link */
+    private static function albumPhotos(array $l): array
+    {
+        return array_values(array_filter(Photo::forAlbum((int) $l['album_id']), static fn($x) => $x['parent_id'] === null && $x['has_thumb']));
+    }
+
+    private static function cover(array $l, array $photos): ?array
+    {
+        foreach ($photos as $x) {
+            if ((int) $x['id'] === (int) $l['cover_photo_id']) {
+                return $x;
+            }
+        }
+        return $photos[0] ?? null;
+    }
+
+    /** Imagem de prévia 1200×630 (Open Graph) do link: capa + nome do culto + data + logo. */
+    public function card(string $token): never
+    {
+        $l = ShareLink::resolve($token) ?? abort(404);
+        if ($l['photo_id']) {
+            $path = SocialCard::forPhoto(Photo::find((int) $l['photo_id']) ?? abort(404));
+        } else {
+            $photos = self::albumPhotos($l);
+            $path = SocialCard::forAlbum($l, self::cover($l, $photos), count($photos));
+        }
+        header('Cross-Origin-Resource-Policy: cross-origin');
+        Delivery::send($path, 'image/jpeg', 'previa.jpg', true, 3600);
     }
 
     /** Imagem pública da foto compartilhada (versão de exibição, sem EXIF). */

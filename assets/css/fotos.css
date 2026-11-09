@@ -289,6 +289,7 @@ code, .font-monospace { color: var(--navy-800); }
 /* Páginas públicas de compartilhamento */
 .publico-topo { display: flex; justify-content: center; padding: 1rem; }
 .publico-card { border-radius: var(--raio); overflow: hidden; }
+.share-card-preview { width: 240px; max-width: 100%; aspect-ratio: 1200 / 630; object-fit: cover; border-radius: 8px; border: 1px solid rgba(0,0,0,.12); box-shadow: 0 4px 12px rgba(11,31,58,.15); }
 .publico-img { max-height: 80vh; object-fit: contain; background: #111; }
 .publico-rodape { color: rgba(255,255,255,.6); }
 .publico-rodape a { color: var(--ouro-300); }

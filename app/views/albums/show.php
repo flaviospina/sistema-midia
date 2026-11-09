@@ -54,7 +54,7 @@
       <?php foreach ($links as $lk): $u = absolute_url('/s/' . $lk['token']); ?>
         <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
           <span class="min-w-0"><strong><?= $lk['photo_id'] ? 'Foto ' . e($lk['file_name']) : 'Álbum inteiro' ?></strong> · <?= (int) $lk['views'] ?> acesso(s) · <?= $lk['expires_at'] ? 'até ' . e(format_date($lk['expires_at'])) : 'sem validade' ?> · <?= e($lk['creator_name'] ?? '') ?><br><span class="share-url text-muted"><?= e($u) ?></span></span>
-          <span class="d-flex gap-1"><button type="button" class="btn btn-sm btn-outline-secondary" data-copy="<?= e($u) ?>"><i class="bi bi-clipboard"></i></button><a class="btn btn-sm btn-outline-secondary" href="<?= e($u) ?>" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i></a>
+          <span class="d-flex gap-1"><a class="btn btn-sm btn-outline-secondary" href="<?= e($u) ?>/cartao.jpg" target="_blank" rel="noopener" title="Imagem da prévia nas redes sociais"><i class="bi bi-image"></i></a><button type="button" class="btn btn-sm btn-outline-secondary" data-copy="<?= e($u) ?>"><i class="bi bi-clipboard"></i></button><a class="btn btn-sm btn-outline-secondary" href="<?= e($u) ?>" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i></a>
           <form method="post" action="<?= url('/links/' . (int) $lk['id'] . '/revogar') ?>" data-confirm="Desativar este link? Quem o tiver deixa de conseguir abrir." data-confirm-type="danger"><?= Csrf::field() ?><button class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i></button></form></span>
         </li>
       <?php endforeach; ?>

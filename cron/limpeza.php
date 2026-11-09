@@ -10,6 +10,7 @@ $uploads = Upload::purgeExpired();
 LoginCode::purge();
 PublicLink::purge();
 ShareLink::purge();
+SocialCard::purge(30);
 Database::run('DELETE FROM em_rate_limits WHERE hit_at < DATE_SUB(NOW(), INTERVAL 1 DAY)');
 Database::run('DELETE FROM em_password_resets WHERE expires_at < DATE_SUB(NOW(), INTERVAL 7 DAY)');
 // Arquivos temporários órfãos (ZIPs não apagados, pastas de envio sem registro)
